@@ -1,0 +1,54 @@
+{
+  "calculation": {
+    "max_time":      1000.0,
+    "max_step!":      0,
+    "shared_memory": true,
+    "threads_num":   4
+  },
+  "mesh": {
+    "class": "rectangular",
+    "type": "real_sector",
+    "geometry": {
+      "R1": 600,
+      "R2": 1500,
+      "Alpha": 3.1415,
+      "Beta":  0.62830,
+      "x_min" : 0.0,
+      "x_max" : 1500.0,
+      "y_min" : 0.0,
+      "y_max" : 1000.0,
+      "z_min" : 0.0,
+      "z_max" : 1000.0
+    },
+    "boundary_conditions": {
+      "left":   "ZOE",
+      "bottom": "WALL",
+      "right":  "ZOE",
+      "top":    "ZOE",
+      "front":  "ZOE",
+      "back":   "ZOE"
+    },
+    "cells_per_x": 40,
+    "cells_per_y!": 10,
+    "cells_per_z!": 20,
+    "adaptation": true,
+    "adaptation_criteria": {
+      "gtype": "none",
+      "stype": "any",
+      "max_fine_level": 6
+    }
+  },
+  "problem": {
+    "name" : "AMR"
+  },
+  "io": {
+    "comment":"output_format is VTK or HDF5",
+    "output_format": "VTK",
+    "output_directory": "output",
+    "filename_prefix": "mesh",
+    "variables": ["u", "lvl"],
+    "write_frequencies": [
+      {"time": 0.0,    "frequency": 50.0  }
+    ]
+  }
+}

@@ -1,0 +1,26 @@
+PROJECT_NAME      = "InfiniMesh"
+PROJECT_NUMBER    = ..
+STRIP_FROM_PATH   = /cygdrive/c/Users/Diablo/CLionProjects/infinimesh
+INPUT             = /cygdrive/c/Users/Diablo/CLionProjects/infinimesh/includes /cygdrive/c/Users/Diablo/CLionProjects/infinimesh/sources
+OUTPUT_DIRECTORY  = /cygdrive/c/Users/Diablo/CLionProjects/infinimesh/doc
+FILE_PATTERNS     = *.h *.cpp
+RECURSIVE         = YES
+TAB_SIZE          = 2
+MARKDOWN_SUPPORT  = YES
+
+EXTRACT_ALL             = YES
+EXTRACT_PRIVATE         = YES
+EXTRACT_STATIC          = YES
+EXTRACT_LOCAL_CLASSES   = YES
+
+INLINE_INFO            = YES
+INLINE_SOURCES         = YES
+STRIP_CODE_COMMENTS    = YES
+REFERENCES_LINK_SOURCE = YES
+ALPHABETICAL_INDEX     = YES
+COLS_IN_ALPHA_INDEX    = 3
+
+GENERATE_TODOLIST = YES
+SOURCE_BROWSER    = YES
+SHOW_FILES        = YES
+INPUT_ENCODING    = UTF-8
