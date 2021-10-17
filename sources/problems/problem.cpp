@@ -2,6 +2,8 @@
 #include <problems/problem.h>
 #include <problems/amr_problem.h>
 #include <problems/convection_problem.h>
+#include <problems/game_of_life.h>
+#include <problems/surface_problem.h>
 
 
 Problem::Problem()
@@ -16,6 +18,12 @@ unique_ptr<Problem> Problem::create(const Configuration &config) {
         }
         else if (problem == "Convection") {
             return makeUnique<ConvectionProblem>(config);
+        }
+        else if (problem == "GameOfLife") {
+            return makeUnique<GameOfLife>(config);
+        }
+        else if (problem == "Surface") {
+            return makeUnique<SurfaceProblem>(config);
         }
         else {
             throw runtime_error("Unknown problem '" + problem + "' in config file.");

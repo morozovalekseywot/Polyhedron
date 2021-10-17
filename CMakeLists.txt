@@ -126,6 +126,8 @@ set(HEADERS
         includes/io/dat/dat_writer.h
         includes/problems/problem.h
         includes/problems/amr_problem.h
+        includes/problems/game_of_life.h
+        includes/problems/surface_problem.h
         includes/problems/convection_problem.h
         includes/utils/math.h
         includes/utils/geom.h
@@ -179,6 +181,8 @@ set(SOURCES
         sources/io/dat/dat_writer.cpp
         sources/problems/problem.cpp
         sources/problems/amr_problem.cpp
+        sources/problems/game_of_life.cpp
+        sources/problems/surface_problem.cpp
         sources/problems/convection_problem.cpp
         sources/utils/math.cpp
         sources/utils/geom.cpp
