@@ -1,7 +1,7 @@
 {
   "calculation": {
     "max_time!":      4.0,
-    "max_step":      100,
+    "max_step":      1000,
     "shared_memory": false,
     "threads_num":   4
   },
@@ -9,37 +9,37 @@
     "class": "rectangular",
     "type":  "rectangle",
     "geometry": {
-      "x_min" : 0.0,
-      "y_min" : 0.0,
-      "x_max" : 100.0,
-      "y_max" : 100.0
+      "x_min" : -2.0,
+      "y_min" : -1.0,
+      "x_max" : 2.0,
+      "y_max" : 1.0
     },
     "boundary_conditions": {
-      "left":   "ZOE",
-      "bottom": "ZOE",
-      "right":  "ZOE",
-      "top":    "ZOE"
+      "left":   "FUNCTION",
+      "bottom": "FUNCTION",
+      "right":  "FUNCTION",
+      "top":    "FUNCTION"
     },
-    "cells_per_x": 100,
+    "cells_per_x": 40,
     "cells_per_y!": 200,
     "cells_per_z!": 1,
     "adaptation": false,
     "adaptation_criteria": {
       "stype": "any",
-      "max_fine_level": 4
+      "max_fine_level": 7
     }
   },
   "problem": {
-    "name" : "GameOfLife"
+    "name" : "Jacobi"
   },
   "io": {
     "comment":"output_format is VTK or HDF5",
     "output_format": "VTK",
     "output_directory": "output",
     "filename_prefix": "mesh",
-    "variables": ["u", "v"],
+    "variables": ["u_old", "u_new", "vol", "vx","vy","vz","v"],
     "write_frequencies": [
-      {"time": 0.0,    "frequency": 0.0 }
+      {"time": 0.0,    "frequency": 10.0 }
     ]
   }
 }

@@ -10,7 +10,7 @@ po::variables_map parse_options(int argc, char ** argv) {
     po::options_description description("InfiniMesh");
 
     description.add_options()
-            ("config,c", po::value<std::string>()->default_value("../examples/demo.json"),
+            ("config,c", po::value<std::string>()->default_value("../examples/life.json"),
              "configuration file path (default: ../examples/demo.json")
             ("restart,r", po::value<std::string>()->default_value(""),
              "path to checkpoint file");

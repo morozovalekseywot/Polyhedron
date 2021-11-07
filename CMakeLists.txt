@@ -129,10 +129,12 @@ set(HEADERS
         includes/problems/game_of_life.h
         includes/problems/surface_problem.h
         includes/problems/convection_problem.h
+        includes/problems/jacobi.h
         includes/utils/math.h
         includes/utils/geom.h
         includes/utils/interface.h
         includes/utils/stopwatch.h
+        includes/utils/inverse.h
         includes/utils/memory/kd_tree.h
         includes/utils/memory/node_list.h
         includes/utils/memory/node.h
@@ -141,7 +143,10 @@ set(HEADERS
         includes/utils/partitioning/base_splitter_1d.h
         includes/utils/partitioning/base_splitter_2d.h
         includes/utils/partitioning/rcb_splitter.h
-        includes/utils/partitioning/voronoi_diagram.h)
+        includes/utils/partitioning/voronoi_diagram.h
+        includes/utils/surface/Triangle.hpp
+        includes/utils/surface/Surface.hpp
+        includes/utils/surface/Vertex.hpp includes/utils/surface/face.hpp includes/utils/surface/bbox.hpp)
 
 set(SOURCES
         libs/json11/src/json11.cpp
@@ -184,6 +189,7 @@ set(SOURCES
         sources/problems/game_of_life.cpp
         sources/problems/surface_problem.cpp
         sources/problems/convection_problem.cpp
+        sources/problems/jacobi.cpp
         sources/utils/math.cpp
         sources/utils/geom.cpp
         sources/utils/interface.cpp
@@ -196,7 +202,9 @@ set(SOURCES
         sources/utils/partitioning/base_splitter_2d.cpp
         sources/utils/partitioning/rcb_splitter.cpp
         sources/utils/partitioning/voronoi_diagram.cpp
-        )
+        sources/utils/surface/Surface.cpp
+        sources/utils/surface/Triangle.cpp
+        sources/utils/surface/Vertex.cpp)
 
 
 add_library(${CMAKE_PROJECT_NAME}_lib STATIC ${SOURCES} ${HEADERS})

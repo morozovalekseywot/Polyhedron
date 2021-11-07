@@ -1,0 +1,58 @@
+solid Prizm
+facet normal -0.894427 -0 0.447214
+	outer loop
+			vertex 0 0 0
+			vertex 0 1 0
+			vertex 0.5 0.4 1
+	endloop
+ endfacet
+facet normal 0 0 -1
+	outer loop
+			vertex 0 0 0
+			vertex 0 1 0
+			vertex 2 1 0
+	endloop
+ endfacet
+facet normal 0 0 -1
+	outer loop
+			vertex 0 0 0
+			vertex 2 1 0
+			vertex 2 0 0
+	endloop
+ endfacet
+facet normal 0 -0.928477 0.371391
+	outer loop
+			vertex 0 0 0
+			vertex 2 0 0
+			vertex 2.5 0.4 1
+	endloop
+ endfacet
+facet normal 0 -0.928477 0.371391
+	outer loop
+			vertex 0 0 0
+			vertex 2.5 0.4 1
+			vertex 0.5 0.4 1
+	endloop
+ endfacet
+facet normal 0 0.857493 0.514496
+	outer loop
+			vertex 2.5 0.4 1
+			vertex 0.5 0.4 1
+			vertex 0 1 0
+	endloop
+ endfacet
+facet normal 0 0.857493 0.514496
+	outer loop
+			vertex 2 1 0
+			vertex 0 1 0
+			vertex 2.5 0.4 1
+	endloop
+ endfacet
+facet normal 0.894427 0 -0.447214
+	outer loop
+			vertex 2 0 0
+			vertex 2 1 0
+			vertex 2.5 0.4 1
+	endloop
+ endfacet
+endsolid Prizm

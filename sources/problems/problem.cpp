@@ -4,7 +4,7 @@
 #include <problems/convection_problem.h>
 #include <problems/game_of_life.h>
 #include <problems/surface_problem.h>
-
+#include <problems/jacobi.h>
 
 Problem::Problem()
     : m_time(0.0) {
@@ -24,6 +24,8 @@ unique_ptr<Problem> Problem::create(const Configuration &config) {
         }
         else if (problem == "Surface") {
             return makeUnique<SurfaceProblem>(config);
+        } else if(problem == "Jacobi"){
+            return makeUnique<Jacobi>(config);
         }
         else {
             throw runtime_error("Unknown problem '" + problem + "' in config file.");
