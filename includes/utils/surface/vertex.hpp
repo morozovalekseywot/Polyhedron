@@ -19,7 +19,9 @@ namespace surf
     {
     public:
 
-        Vertex(const Vector3d &point);
+        Vertex() = default;
+
+        explicit Vertex(const Vector3d &point);
 
         ~Vertex() = default;
 
@@ -31,6 +33,9 @@ namespace surf
 
         /// Метод чтобы в конце конструктора расставить для вершин смежные треуголники
         void set_next_triangle(size_t idx);
+
+        /// конвертирование в Eigen::Vector3d
+        operator Eigen::Vector3d() const;
 
         // Возможно эти операторы вообще не нужны
         Vector3d operator+(const Vertex &a) const;

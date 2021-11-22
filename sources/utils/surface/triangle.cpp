@@ -1,4 +1,4 @@
-#include <utils/surface/Triangle.hpp>
+#include <utils/surface/triangle.hpp>
 
 surf::Triangle::Triangle(const std::vector<std::pair<Vertex, size_t>> &verts)
 {
@@ -8,7 +8,7 @@ surf::Triangle::Triangle(const std::vector<std::pair<Vertex, size_t>> &verts)
 
 surf::Triangle::Triangle(size_t index, const std::vector<size_t> &verts, const Vector3d &n) : index(index), normal(n)
 {
-    vertices = {verts[0], verts[1], verts[1]};
+    vertices = {verts[0], verts[1], verts[2]};
 }
 
 void surf::Triangle::set_triangles(const std::vector<size_t> &t)

@@ -5,7 +5,7 @@
 #include <map>
 #include <set>
 #include <utility>
-#include <utils/surface/Vertex.hpp>
+#include <utils/surface/vertex.hpp>
 #include <boost/container/static_vector.hpp>
 #include <Dense> /// from Eigen library
 
@@ -19,6 +19,8 @@ namespace surf
     {
     public:
         size_t index;
+
+        Triangle() = default;
 
         explicit Triangle(const std::vector<std::pair<Vertex, size_t>> &verts);
 

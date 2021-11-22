@@ -1,4 +1,4 @@
-#include <utils/surface/Vertex.hpp>
+#include <utils/surface/vertex.hpp>
 
 surf::Vertex::Vertex(const Vector3d &point) : v(point)
 {}
@@ -50,6 +50,11 @@ void surf::Vertex::set_next_triangle(size_t idx)
     if (triangles.size() >= max_triangles)
         throw std::runtime_error("number_of_triangles > max_triangles");
     triangles.push_back(idx);
+}
+
+surf::Vertex::operator Eigen::Vector3d() const
+{
+    return v;
 }
 
 Vector3d cross(const surf::Vertex &a, const surf::Vertex &b)

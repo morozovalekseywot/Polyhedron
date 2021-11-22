@@ -144,9 +144,11 @@ set(HEADERS
         includes/utils/partitioning/base_splitter_2d.h
         includes/utils/partitioning/rcb_splitter.h
         includes/utils/partitioning/voronoi_diagram.h
-        includes/utils/surface/Triangle.hpp
-        includes/utils/surface/Surface.hpp
-        includes/utils/surface/Vertex.hpp includes/utils/surface/face.hpp includes/utils/surface/bbox.hpp)
+        includes/utils/surface/triangle.hpp
+        includes/utils/surface/surface.hpp
+        includes/utils/surface/vertex.hpp
+        includes/utils/surface/face.hpp
+        includes/utils/surface/bbox.hpp)
 
 set(SOURCES
         libs/json11/src/json11.cpp
@@ -202,9 +204,12 @@ set(SOURCES
         sources/utils/partitioning/base_splitter_2d.cpp
         sources/utils/partitioning/rcb_splitter.cpp
         sources/utils/partitioning/voronoi_diagram.cpp
-        sources/utils/surface/Surface.cpp
-        sources/utils/surface/Triangle.cpp
-        sources/utils/surface/Vertex.cpp)
+        sources/utils/surface/surface.cpp
+        sources/utils/surface/triangle.cpp
+        sources/utils/surface/vertex.cpp
+        sources/utils/surface/bbox.cpp
+        sources/utils/surface/face.cpp
+        tests/tests_surface.cpp)
 
 
 add_library(${CMAKE_PROJECT_NAME}_lib STATIC ${SOURCES} ${HEADERS})
