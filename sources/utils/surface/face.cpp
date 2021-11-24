@@ -3,11 +3,7 @@
 
 surf::Face::Face(const std::array<Eigen::Vector3d,3> &a, const Eigen::Vector3d &norm) : vects(a)
 {
-    if (a.size() != n_verts)
-    {
-        throw std::runtime_error("Wrong number of vertices");
-    }
-    normal = norm;
+    normal = norm.normalized();
 }
 
 surf::Face::Face(const std::vector<Eigen::Vector3d> &a)
