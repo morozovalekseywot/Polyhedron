@@ -17,7 +17,7 @@ namespace surf
         std::array<Eigen::Vector3d, 3> vects; /// массив вершин
         Eigen::Vector3d normal;        /// единичная внешняя нормаль
 
-        Face(const std::vector<Eigen::Vector3d> &a, const Eigen::Vector3d &norm);
+        Face(const std::array<Eigen::Vector3d,3> &a, const Eigen::Vector3d &norm);
 
         explicit Face(const std::vector<Eigen::Vector3d> &a);
 

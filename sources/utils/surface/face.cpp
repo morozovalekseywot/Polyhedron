@@ -1,13 +1,12 @@
 #include <utils/surface/face.hpp>
 
 
-surf::Face::Face(const std::vector<Eigen::Vector3d> &a, const Eigen::Vector3d &norm)
+surf::Face::Face(const std::array<Eigen::Vector3d,3> &a, const Eigen::Vector3d &norm) : vects(a)
 {
     if (a.size() != n_verts)
     {
         throw std::runtime_error("Wrong number of vertices");
     }
-    vects = {a[0], a[1], a[2]};
     normal = norm;
 }
 

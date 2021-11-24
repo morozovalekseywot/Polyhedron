@@ -21,16 +21,19 @@ surf::Surface::Surface(const std::string &filename)
     getline(file, t); // игнорируем имя solid
     while (!file.eof())
     {
-        getline(file, t); // facet normal
+        file >> t; // facet
+        file >> t; // normal
+        Vector3d n;
+        file >> n.x() >> n.y() >> n.z();
+        getline(file, t); // ignore /n
         getline(file, t); // outer loop
-        Vector3d a, b, c;
-        file >> t; // vertex
-        file >> a.x() >> a.y() >> a.z();
-        file >> t; // vertex
-        file >> b.x() >> b.y() >> b.z();
-        file >> t; // vertex
-        file >> c.x() >> c.y() >> c.z();
-        faces.emplace_back(Face({a, b, c}));
+        std::array<Vector3d, 3> verts;
+        for (auto &v: verts)
+        {
+            file >> t; // vertex
+            file >> v.x() >> v.y() >> v.z();
+        }
+        faces.emplace_back(Face(verts, n));
         getline(file, t); // ignore /n
         getline(file, t); // endloop
         getline(file, t); // endfacet

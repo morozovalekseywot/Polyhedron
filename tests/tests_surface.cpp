@@ -10,7 +10,7 @@ using namespace boost::unit_test;
 
 BOOST_AUTO_TEST_SUITE(Surface)
 
-    BOOST_AUTO_TEST_CASE(constructor)
+    BOOST_AUTO_TEST_CASE(surface_constructor)
     {
         surf::Surface surf("../examples/Prizm.stl");
         BOOST_CHECK_CLOSE_FRACTION(surf.getMLength(), std::sqrt(2.5 * 2.5 + 1 + 1), 0.0001); // (0,0,0), (2.5,1,1)
