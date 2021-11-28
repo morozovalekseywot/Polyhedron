@@ -209,7 +209,8 @@ set(SOURCES
         sources/utils/surface/vertex.cpp
         sources/utils/surface/bbox.cpp
         sources/utils/surface/face.cpp
-        tests/tests_surface.cpp)
+        tests/test_surface.cpp
+        tests/test_is_inside.cpp)
 
 
 add_library(${CMAKE_PROJECT_NAME}_lib STATIC ${SOURCES} ${HEADERS})
