@@ -1,4 +1,5 @@
 #include <utils/surface/surface.hpp>
+
 #define BOOST_TEST_MAIN
 #define BOOST_TEST_MODULE surface
 #define BOOST_TEST_NO_LIB
@@ -12,8 +13,8 @@ BOOST_AUTO_TEST_SUITE(Surface)
 
     BOOST_AUTO_TEST_CASE(surface_constructor)
     {
-        surf::Surface surf("../examples/Prizm.stl");
-        BOOST_CHECK_CLOSE_FRACTION(surf.getMLength(), std::sqrt(2.5 * 2.5 + 1 + 1), 0.0001); // (0,0,0), (2.5,1,1)
+        surf::Surface surf("../examples/tetra.stl");
+        BOOST_CHECK_CLOSE_FRACTION(surf.getMLength(), std::sqrt(1.5 * 1.5 + 1 + 1), 0.0001); // (-2,-2,-0.5), (-0.5,-1,0.5)
         std::vector<surf::Triangle> triangles = surf.getMTriangles();
         std::vector<surf::Vertex> verts = surf.getMVertices();
         for (auto &triangle: triangles)
@@ -35,14 +36,11 @@ BOOST_AUTO_TEST_SUITE(Surface)
                 BOOST_CHECK_EQUAL(*it, triangle.index); // проверяем что у всех соседних треугольников наш треугольник записан как сосед
             }
         }
+        BOOST_CHECK_EQUAL(surf.is_inside(Vector3d{0.359 , -0.933 , -0.479}),true);
+        BOOST_CHECK_EQUAL(surf.is_inside(Vector3d{-1.56 , -1.30 , -0.39 }),true);
 
-
-        BOOST_CHECK_EQUAL(surf.is_inside(Vector3d{0.55,0.63,0.55}),true);
-        BOOST_CHECK_EQUAL(surf.is_inside(Vector3d{1.58,0.36,0.34}),true);
-        BOOST_CHECK_EQUAL(surf.is_inside(Vector3d{0.33,0.15,0.19}),true);
-        BOOST_CHECK_EQUAL(surf.is_inside(Vector3d{1.99,0.29,0.59}),true);
-        BOOST_CHECK_EQUAL(surf.is_inside(Vector3d{0.51,0.08,0.04}),true);
-
+        BOOST_CHECK_EQUAL(surf.is_inside(Vector3d{-1.00,-1.91,-0.466}),true);
+        BOOST_CHECK_EQUAL(surf.is_inside(Vector3d{-1.41,-1.22,-0.21}),true);
     }
 
 BOOST_AUTO_TEST_SUITE_END()
