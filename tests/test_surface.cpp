@@ -98,6 +98,7 @@ BOOST_AUTO_TEST_SUITE(Surface_constructor)
         BOOST_CHECK_CLOSE_FRACTION(surf.getMLength(), std::sqrt(3 * 3 + 2 * 2 + 1), 0.0001); // (-2, -2, -0.5), (1, 0, 0.5)
         std::vector<surf::Triangle> triangles = surf.getMTriangles();
         std::vector<surf::Vertex> verts = surf.getMVertices();
+        BOOST_CHECK_EQUAL(triangles.size(), 4);
         for (auto &triangle: triangles)
         {
             std::array<size_t, 3> t_verts = triangle.vertices;

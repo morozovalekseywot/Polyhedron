@@ -22,6 +22,8 @@ surf::Surface::Surface(const std::string &filename)
     while (!file.eof())
     {
         file >> t; // facet
+        if (t == "endsolid")
+            break;
         file >> t; // normal
         Vector3d n;
         file >> n.x() >> n.y() >> n.z();
@@ -46,14 +48,6 @@ surf::Surface::Surface(const std::string &filename)
     BBox bbox(faces);
     m_length = bbox.len.norm();
     /// Далее самая сложная операция, удалить дубликаты вершин.
-
-    /// Вариант 1. Тупой, за O(N^2).
-    /// Проходим по треугольникам в raw_triangles, треугольник кидаем
-    /// в m_triangles, затем у каждого треугольника проходим по вершинам.
-    /// Сначала ищем вершину в m_vertices (простым перебором), если
-    /// вершины там нет (с точностью до eps*m_length), тогда добавляем
-    /// новую вершину в конец m_vertices, а индекс этой вершины
-    /// записываем в вершину к m_triangles.back().
 
     /// Вариант 2. Адекватный, за O(N log(N)).
     /// Вершины добавляются параллельно в m_vertices и в некоторый
@@ -106,7 +100,7 @@ surf::Surface::Surface(const std::string &filename)
         size_t idx1 = std::distance(m_vertices.begin(), it1);
         size_t idx2 = std::distance(m_vertices.begin(), it2);
         size_t idx3 = std::distance(m_vertices.begin(), it3);
-        m_triangles[size] = Triangle(size, {idx1, idx2, idx3}, face.normal);
+        m_triangles[size] = Triangle(size, {idx1, idx2, idx3}, face.normal, face.area);
         size++;
     }
     /// Ладно, пофиг, реализовали первый варинат. Теперь у нас есть

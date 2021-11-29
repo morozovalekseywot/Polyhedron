@@ -24,7 +24,7 @@ namespace surf
 
         explicit Triangle(const std::vector<std::pair<Vertex, size_t>> &verts);
 
-        Triangle(size_t index, const std::vector<size_t> &verts, const Vector3d &n);
+        Triangle(size_t index, const std::vector<size_t> &verts, const Vector3d &n, double area);
 
         ~Triangle() = default;
 
@@ -39,5 +39,8 @@ namespace surf
 
         /// @brief Внешняя нормаль треугольника
         Vector3d normal;
+
+        /// @brief площадь треугольника
+        double area;
     };
 }

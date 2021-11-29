@@ -1,9 +1,10 @@
 #include <utils/surface/face.hpp>
 
 
-surf::Face::Face(const std::array<Eigen::Vector3d,3> &a, const Eigen::Vector3d &norm) : vects(a)
+surf::Face::Face(const std::array<Eigen::Vector3d, 3> &a, const Eigen::Vector3d &norm) : vects(a)
 {
     normal = norm.normalized();
+    area = 0.5 * ((a[1] - a[0]).cross(a[2] - a[0])).norm();
 }
 
 surf::Face::Face(const std::vector<Eigen::Vector3d> &a)
@@ -17,6 +18,7 @@ surf::Face::Face(const std::vector<Eigen::Vector3d> &a)
 
     normal = (vects[1] - vects[0]).cross(vects[2] - vects[0]);
     normal.normalize();
+    area = 0.5 * ((a[1] - a[0]).cross(a[2] - a[0])).norm();
     if (normal == Eigen::Vector3d(0, 0, 0))
     {
         std::cerr << "\n" << vects[0] << "|" << vects[1] << "|" << vects[2] << "\n";
@@ -33,5 +35,6 @@ surf::Face &surf::Face::operator=(const surf::Face &a)
 {
     vects = a.vects;
     normal = a.normal;
+    area = a.area;
     return *this;
 }

@@ -13,7 +13,7 @@ BOOST_AUTO_TEST_SUITE(Surface_is_inside)
     {
         surf::Surface surf("../examples/figure/tetra.stl");
 
-        BOOST_CHECK_EQUAL(surf.is_inside(Vector3d{0.359, -0.933, -0.479}), true);
+        BOOST_CHECK_EQUAL(surf.is_inside(Vector3d{0.359, -0.933, -0.479}), false);
         BOOST_CHECK_EQUAL(surf.is_inside(Vector3d{-1.56, -1.30, -0.39}), true);
         BOOST_CHECK_EQUAL(surf.is_inside(Vector3d{-1.00, -1.91, -0.466}), true);
         BOOST_CHECK_EQUAL(surf.is_inside(Vector3d{-1.41, -1.22, -0.21}), true);
