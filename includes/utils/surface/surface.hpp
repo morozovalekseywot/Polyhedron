@@ -34,15 +34,16 @@ using Eigen::Vector3d;
 /// Vertex и Triangle могут встречаться в других местах проекта
 namespace surf
 {
-#define equal_d(a, b) abs(a - b) < m_length / 1e8
-
     /// @brief Класс поверхности, версия для овощей
     /// Есть только конструктор и функция is_inside, реализованная
     /// первоклассниками. В целом, этого достаточно для решения задачи.
     class Surface
     {
+    #define equal_d(a, b) abs(a - b) < m_length / 1e8
+
     public:
 
+        Surface() : m_length(0.0) {}
         /// @brief Конструктор класса из stl файла
         /// @param filename Имя stl файла
         explicit Surface(const std::string &filename);

@@ -8,53 +8,14 @@
 #include <problems/jacobi.h>
 
 Jacobi::Jacobi(const Configuration &config)
-{}
-
+{
+    figure = surf::Surface("examples/figure/pyramid.stl");
+}
 
 uint Jacobi::cell_data_size() const
 {
     return static_cast<uint>(ceil(double(sizeof(JacobiCellData)) / sizeof(double)));
 }
-
-/*
-double is_inside(const Vector3d &r)
-{
-    // задаём трубу
-    Vector3d right_up = {0.7, 0.2, 0.0};
-    Vector3d right_down = {0.7, -0.2, 0.0};
-    Vector3d left_up = {-0.70, 0.2, 0.0};
-    Vector3d left_down = {-0.7, 0.2, 0.0};
-
-    Vector3d up = right_up - left_up;
-    Vector3d right = right_down - right_up;
-    Vector3d down = left_down - right_down;
-    Vector3d left = left_up - left_down;
-
-    std::vector<std::pair<Vector3d, Vector3d>> sides(4);// пара: (нормаль, центр)
-    sides[0] = std::make_pair(Vector3d{up.x(), up.y(), 0.0}, up / 2);
-    sides[1] = std::make_pair(Vector3d{right.x(), right.y(), 0.0}, right / 2);
-    sides[2] = std::make_pair(Vector3d{down.x(), down.y(), 0.0}, down / 2);
-    sides[3] = std::make_pair(Vector3d{left.x(), left.y(), 0.0}, left / 2);
-    for (auto &side: sides)
-    {
-        if (side.first.x() * side.second.x() + side.first.y() * side.second.y() +
-            side.first.z() * side.second.z() < 0.0)
-        {
-            side.first = -side.first;
-        }
-    }
-
-    for (auto &side: sides)
-    {
-        Vector3d vec = side.second - r;
-        if (side.first.x() * vec.x() + side.first.y() * vec.y() +
-            side.first.z() * vec.z() < 0.0)
-            return 0.0;
-    }
-
-    return 1.0;
-}
-*/
 
 void Jacobi::initialization(Mesh *mesh)
 {
@@ -67,29 +28,7 @@ void Jacobi::initialization(Mesh *mesh)
         data.u1 = 0.0;
         data.u2 = 0.0;
         // data.idx = ??
-
-//        for (auto &face: cell->faces())
-//        {
-//            auto neib = face->neighbor(cell);
-//
-//            if (figure.is_inside(neib->center()) == 0.0)
-//            {
-//                // Сколько ставить отличие по y??
-//                Vector3d r = neib->center() - cell->center();
-//                if (r.x() < 0.0 && abs(r.y()) < abs(r.x()) / 20)
-//                {
-//                    data.v = {10.0, 0.0, 0.0};
-//                    // data.condition = 10.0; ??
-//                } else if (r.x() > 0.0 && abs(r.y()) < abs(r.x()) / 20)
-//                {
-//                    data.v = {20.0, 0.0, 0.0};
-//                    // data.condition = 20.0; ??
-//                }
-//                break;
-//            }
-//        }
-//        data.u1 = double(rand()) / RAND_MAX;
-//        data.u2 = 0.0;
+        data.vol = figure.is_inside(cell->center());
         set_state(cell, data);
     }
 }
@@ -117,6 +56,15 @@ double Jacobi::solution_step(Mesh *mesh)
     // u_a * sum(mu) - sum(mu * u_b) = граничное условие или 0
     for (auto cell: *mesh->cells())
     {
+        if (get_state(cell).vol > 0)
+        {
+            auto data = get_state(cell);
+            data.u2 = 0.0;
+            data.v = Vector3d::Zero();
+            set_state(cell, data);
+            continue;
+        }
+
         double neib_sum = 0.0, mu_sum = 0.0;
         double cond_sum = 0.0;
         for (auto &face: cell->faces())
@@ -142,6 +90,8 @@ double Jacobi::solution_step(Mesh *mesh)
     // расчёт скорости
     for (auto cell: *mesh->cells())
     {
+        if (get_state(cell).vol > 0.0)
+            continue;
         Matrix3d a = Matrix3d::Zero();
         Vector3d f = Vector3d::Zero();
         JacobiCellData self_data = get_state(cell);
@@ -176,6 +126,8 @@ double Jacobi::solution_step(Mesh *mesh)
     m_delta = 0.0;
     for (auto cell: *mesh->cells())
     {
+        if (get_state(cell).vol > 0.0)
+            continue;
         double neib_sum = 0.0, mu_sum = 0.0;
         double cond_sum = 0.0;
         for (auto &face: cell->faces())
@@ -246,7 +198,7 @@ void Jacobi::coarse_data(const shared_ptr<Cell> &parent, const vector<shared_ptr
 void Jacobi::print_info(const char *tab) const
 {
     std::cout << std::setprecision(4) << "Eps = " << m_eps;
-    std::cout << ",Delta = " << m_delta << "\n";
+    std::cout << ", Delta = " << m_delta << "\n";
 }
 
 double Jacobi::get_cell_param(const shared_ptr<Cell> &cell, const string &name) const

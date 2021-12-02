@@ -1,24 +1,28 @@
 {
   "calculation": {
     "max_time!":      4.0,
-    "max_step":      1000,
+    "max_step":      500,
     "shared_memory": false,
-    "threads_num":   4
+    "threads_num":   8
   },
   "mesh": {
     "class": "rectangular",
-    "type":  "rectangle",
+    "type":  "cuboid",
     "geometry": {
       "x_min" : -2.0,
-      "y_min" : -1.0,
+      "y_min" : -2.0,
       "x_max" : 2.0,
-      "y_max" : 1.0
+      "y_max" : 2.0,
+      "z_min" : -2.0,
+      "z_max" : 2.0
     },
     "boundary_conditions": {
       "left":   "FUNCTION",
       "bottom": "FUNCTION",
       "right":  "FUNCTION",
-      "top":    "FUNCTION"
+      "top":    "FUNCTION",
+      "back":   "FUNCTION",
+      "front":  "FUNCTION"
     },
     "cells_per_x": 40,
     "cells_per_y!": 200,

@@ -10,7 +10,7 @@ set(USE_TCMALLOC FALSE)
 set(ENABLE_MPI OFF)
 
 # Dimension
-add_definitions(-DDIMENSION=2)
+add_definitions(-DDIMENSION=3)
 
 #add definition to check some functions in runtime (decrease performance)
 #add_definitions(-DFULL_CHECK)
