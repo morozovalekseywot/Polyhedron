@@ -395,9 +395,9 @@ array<int, 3> OrthDecomposition::proc_coord(int rank) const {
 int OrthDecomposition::rank(const Vector3d& vertex) const {
     Vector3d v = m_to_local(vertex);
 
-    double _r   = v.norm();
-    double _phi = atan2(v[1], v[0]) - ROTATION_ANGLE;
-    v = {_r * cos(_phi), _r * sin(_phi), 0.0};
+    //double _r   = v.norm();
+    //double _phi = atan2(v[1], v[0]) - ROTATION_ANGLE;
+    //v = {_r * cos(_phi), _r * sin(_phi), 0.0};
 
     // Определяем угол
     int I = -1;

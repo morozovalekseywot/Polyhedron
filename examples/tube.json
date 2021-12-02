@@ -1,7 +1,7 @@
 {
   "calculation": {
     "max_time!":      4.0,
-    "max_step":      500,
+    "max_step":      0,
     "shared_memory": false,
     "threads_num":   8
   },
@@ -24,13 +24,13 @@
       "back":   "FUNCTION",
       "front":  "FUNCTION"
     },
-    "cells_per_x": 40,
+    "cells_per_x": 20,
     "cells_per_y!": 200,
     "cells_per_z!": 1,
-    "adaptation": false,
+    "adaptation": true,
     "adaptation_criteria": {
       "stype": "any",
-      "max_fine_level": 7
+      "max_fine_level": 3
     }
   },
   "problem": {
