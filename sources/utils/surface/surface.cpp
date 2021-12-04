@@ -157,12 +157,13 @@ const std::vector<surf::Triangle> &surf::Surface::getMTriangles() const
     return m_triangles;
 }
 
-bool surf::Surface::is_inside(const Vector3d &v) const
+bool surf::Surface::is_inside(const Vector3d &v_) const
 {
     /// Здесь простая реализация. Будем использовать простейшее правило
     /// четный-нечетный (even-odd rule). Из какой-нибудь точки выпускается
     /// луч в произвольном направлении. Затем отыскиваются пересечения луча
     /// и треугольников поверхности.
+    Vector3d v = v_;
     Vector3d s = {0.0, 0.0, 0.0};
     for (auto &idx: m_triangles[m_vertices.back().triangles[0]].vertices) // берём треугольник смежный последней точке
         s = s + m_vertices[idx].v;
@@ -187,6 +188,15 @@ bool surf::Surface::is_inside(const Vector3d &v) const
         if (scalar(triangle.normal, v - first) * scalar(triangle.normal, s - first) > 0.0)
             continue;
 
+        if (abs(scalar(triangle.normal, first - v)) / (first - v).norm() < 1e-5) // точка лежит в плоскости треугольника
+        {
+            std::array<Vector3d, 3> arr;
+            for (int i = 0; i < 3; i++)
+                arr[i] = m_vertices[triangle.vertices[i]].v;
+
+            double area_ = ((v - arr[0]).cross(v - arr[1])).norm() + ((v - arr[0]).cross(v - arr[2])).norm() + ((v - arr[1]).cross(v - arr[2])).norm();
+            return (abs(area_ - 2 * triangle.area) < triangle.area * 1e-5);
+        }
         // ур-е плоскости: Ax + By + Cz + D = 0
         // ур-е прямой: x = v.x + m * t, y = v.y + p * t, z = v.y + l * t
         // A = y1 (z2 - z3) + y2 (z3 - z1) + y3 (z1 - z2)
@@ -209,11 +219,23 @@ bool surf::Surface::is_inside(const Vector3d &v) const
         if (t < 0.0)
             continue;
         Vector3d x = {v.x() + t * l.x(), v.y() + t * l.y(), v.z() + t * l.z()};
-        double area_ = ((x - arr[0]).cross(x - arr[1])).norm() + ((x - arr[0]).cross(x - arr[2])).norm() + ((x - arr[1]).cross(x - arr[2])).norm();
-        if (abs(area_ - 2 * triangle.area) > triangle.area * 1e-5)
+        std::array<double, 3> arr_area = {((x - arr[0]).cross(x - arr[1])).norm(), ((x - arr[0]).cross(x - arr[2])).norm(),
+                                          ((x - arr[1]).cross(x - arr[2])).norm()};
+        //double area_ = ((x - arr[0]).cross(x - arr[1])).norm() + ((x - arr[0]).cross(x - arr[2])).norm() + ((x - arr[1]).cross(x - arr[2])).norm();
+        if (abs(arr_area[0] + arr_area[1] + arr_area[2] - 2 * triangle.area) > triangle.area * 1e-5)
             continue; // точка не в треугольнике
         else
+        {
+            for (auto &area: arr_area)
+            {
+                if (area < triangle.area * 1e-5)
+                {
+                    v = (250 * v + arr[0] + arr[1] + arr[2]) / 251;
+                    break;
+                }
+            }
             count++;
+        }
     }
 
     /// Если пересечений нечетное количество,

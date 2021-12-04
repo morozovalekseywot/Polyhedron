@@ -65,6 +65,7 @@ public:
 private:
     double m_eps = 0.0; // max|u2-u1|
     double m_delta = 0.0;
+    bool first_step = true; // был ли совершён первый шаг расчёта
 
     JacobiCellData get_state(Cell_Ref cell) const;
 

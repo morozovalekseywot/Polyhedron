@@ -9,7 +9,7 @@
 
 Jacobi::Jacobi(const Configuration &config)
 {
-    figure = surf::Surface("examples/figure/pyramid.stl");
+    figure = surf::Surface("examples/figure/pyramid2.stl");
 }
 
 uint Jacobi::cell_data_size() const
@@ -28,27 +28,54 @@ void Jacobi::initialization(Mesh *mesh)
         data.u1 = 0.0;
         data.u2 = 0.0;
         // data.idx = ??
-        data.vol = figure.is_inside(cell->center());
         set_state(cell, data);
     }
 }
 
-double boundary_function(const Vector3d &vec, const Vector3d &n)
+double boundary_function(FaceFlag flag,const Vector3d &vec, const Vector3d &n)
 {
-    if (vec.x() < 0 && n.x() < -0.5)
-    {
+    if(flag == FaceFlag::INFLOW)
         return 10.0;
-    }
-    if (vec.x() > 0 && vec.y() < 0 && n.x() > 0.5)
-    {
-        return -20.0;
-    }
+
+    if(flag == FaceFlag::OUTFLOW)
+        return 10.0;
+
+//    if (vec.x() < 0 && n.x() < -0.5)
+//    {
+//        return 10.0;
+//    }
+//    if (vec.x() > 0 && vec.y() < 0 && n.x() > 0.5)
+//    {
+//        return -20.0;
+//    }
 
     return 0;
 }
 
 double Jacobi::solution_step(Mesh *mesh)
 {
+    if(first_step) // расстановка cтенок фигуры при первом шаге
+    {
+        for (auto cell: *mesh->cells())
+        {
+            JacobiCellData self_data;
+            if(self_data.vol < 1e-8)
+                continue;
+            for (auto &face: cell->faces())
+            {
+                if (face->flag() != FaceFlag::ORDER)
+                {
+                    auto data = get_state(face->neighbor(cell));
+                    if(data.vol>1e-8)
+                    {
+                        face->set_flag(FaceFlag::WALL);
+                    }
+                }
+            }
+        }
+        first_step = false;
+    }
+
     // Во время расчетного шага считаем потенциалы на следующей итерации u2,
     // затем записываем u2 на место u1, считаем градиент u1 методом МНК, то
     // есть получаем компоненты Vx, Vy, Vz
@@ -69,9 +96,15 @@ double Jacobi::solution_step(Mesh *mesh)
         double cond_sum = 0.0;
         for (auto &face: cell->faces())
         {
+//            if(face->flag() == FaceFlag::WALL)
+//            {
+//                mu_sum += face->area() / (face->neighbor(cell)->center() - cell->center()).norm();
+//                continue;
+//            }
+
             if (face->flag() != FaceFlag::ORDER)
             {
-                cond_sum += face->area() * boundary_function(face->center(), -face->normal(cell));
+                cond_sum += face->area() * boundary_function(face->flag(),face->center(), -face->normal(cell));
             } else
             {
                 auto data = get_state(face->neighbor(cell));
@@ -90,7 +123,7 @@ double Jacobi::solution_step(Mesh *mesh)
     // расчёт скорости
     for (auto cell: *mesh->cells())
     {
-        if (get_state(cell).vol > 0.0)
+        if (get_state(cell).vol > 1e-5 * figure.getMLength())
             continue;
         Matrix3d a = Matrix3d::Zero();
         Vector3d f = Vector3d::Zero();
@@ -98,7 +131,7 @@ double Jacobi::solution_step(Mesh *mesh)
 
         for (auto &face: cell->faces())
         {
-            if (face->flag() != FaceFlag::ORDER)
+            if (face->flag() != FaceFlag::ORDER || face->flag() == FaceFlag::WALL)
                 continue;
 
             auto data = get_state(face->neighbor(cell));
@@ -126,7 +159,7 @@ double Jacobi::solution_step(Mesh *mesh)
     m_delta = 0.0;
     for (auto cell: *mesh->cells())
     {
-        if (get_state(cell).vol > 0.0)
+        if (get_state(cell).vol > 1e-5)
             continue;
         double neib_sum = 0.0, mu_sum = 0.0;
         double cond_sum = 0.0;
@@ -134,7 +167,7 @@ double Jacobi::solution_step(Mesh *mesh)
         {
             if (face->flag() != FaceFlag::ORDER)
             {
-                cond_sum += face->area() * boundary_function(face->center(), -face->normal(cell));
+                cond_sum += face->area() * boundary_function(face->flag(),face->center(), -face->normal(cell));
             } else
             {
                 auto data = get_state(face->neighbor(cell));

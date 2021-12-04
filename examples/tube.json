@@ -1,7 +1,7 @@
 {
   "calculation": {
     "max_time!":      4.0,
-    "max_step":      0,
+    "max_step":      100,
     "shared_memory": false,
     "threads_num":   8
   },
@@ -17,12 +17,12 @@
       "z_max" : 2.0
     },
     "boundary_conditions": {
-      "left":   "FUNCTION",
-      "bottom": "FUNCTION",
-      "right":  "FUNCTION",
-      "top":    "FUNCTION",
-      "back":   "FUNCTION",
-      "front":  "FUNCTION"
+      "left":   "INFLOW",
+      "bottom": "NOTLEAKAGE",
+      "right":  "OUTFLOW",
+      "top":    "NOTLEAKAGE",
+      "back":   "NOTLEAKAGE",
+      "front":  "NOTLEAKAGE"
     },
     "cells_per_x": 20,
     "cells_per_y!": 200,

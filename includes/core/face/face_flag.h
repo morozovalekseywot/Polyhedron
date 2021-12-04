@@ -6,12 +6,15 @@
 
 /// @brief Флаги граничных условий, устанавливаются с двух сторон от граней.
 enum class FaceFlag : int {
-    UNDEFINED = 0, ///< Не определено.
-    ORDER = 1,     ///< Обычное соседство (внутри сетки).
-    WALL = 2,      ///< Непроницаемая стенка.
-    ZOE = 3,       ///< Отображение данных запрашиваемой ячейки (простой снос).
-    PERIODIC = 4,  ///< Периодичность.
-    FUNCTION = 5,  ///< Функция задается пользователем.
+    UNDEFINED = 0,   ///< Не определено.
+    ORDER = 1,       ///< Обычное соседство (внутри сетки).
+    WALL = 2,        ///< Непроницаемая стенка.
+    ZOE = 3,         ///< Отображение данных запрашиваемой ячейки (простой снос).
+    PERIODIC = 4,    ///< Периодичность.
+    FUNCTION = 5,    ///< Функция задается пользователем.
+    INFLOW = 6,      ///< Втекание жидкости.
+    OUTFLOW = 7,     ///< Вытекание жидкости.
+    NOTLEAKAGE = 8,  ///< Может ли жидкость протекать через стенку.
 };
 
 /// @brief Преобразует флаг в целочисленный тип.
@@ -39,6 +42,12 @@ inline std::string to_string(FaceFlag flag) {
             return "PERIODIC";
         case FaceFlag::UNDEFINED:
             return "UNDEFINED";
+        case FaceFlag::INFLOW:
+            return "INFLOW";
+        case FaceFlag::OUTFLOW:
+            return "OUTFLOW";
+        case FaceFlag::NOTLEAKAGE:
+            return "NOTLEAKAGE";
         default:
             throw std::runtime_error("Unknown FaceFlag");
     }
@@ -60,6 +69,12 @@ inline FaceFlag to_face_flag(std::string str) {
         return FaceFlag::FUNCTION;
     } else if (str == "PERIODIC") {
         return FaceFlag::PERIODIC;
+    } else if (str == "INFLOW") {
+        return FaceFlag::INFLOW;
+    } else if (str == "OUTFLOW") {
+        return FaceFlag::OUTFLOW;
+    } else if (str == "NOTLEAKAGE") {
+        return FaceFlag::NOTLEAKAGE;
     } else {
         throw std::runtime_error("Error: Can't read FaceFlag from string " + str);
     }
