@@ -38,38 +38,25 @@ double boundary_function(FaceFlag flag,const Vector3d &vec, const Vector3d &n)
         return 10.0;
 
     if(flag == FaceFlag::OUTFLOW)
-        return 10.0;
+        return -10.0;
 
-//    if (vec.x() < 0 && n.x() < -0.5)
-//    {
-//        return 10.0;
-//    }
-//    if (vec.x() > 0 && vec.y() < 0 && n.x() > 0.5)
-//    {
-//        return -20.0;
-//    }
-
-    return 0;
+    return 0.0;
 }
 
 double Jacobi::solution_step(Mesh *mesh)
 {
     if(first_step) // расстановка cтенок фигуры при первом шаге
     {
-        for (auto cell: *mesh->cells())
-        {
-            JacobiCellData self_data;
-            if(self_data.vol < 1e-8)
-                continue;
-            for (auto &face: cell->faces())
-            {
-                if (face->flag() != FaceFlag::ORDER)
-                {
-                    auto data = get_state(face->neighbor(cell));
-                    if(data.vol>1e-8)
-                    {
-                        face->set_flag(FaceFlag::WALL);
-                    }
+        for (auto cell: *mesh->cells()) {
+            JacobiCellData self_data = get_state(cell);
+            for (auto &face: cell->faces()) {
+                if (face->flag() != FaceFlag::ORDER) {
+                    continue;
+                }
+
+                auto neib_data = get_state(face->neighbor(cell));
+                if (self_data.vol != neib_data.vol) {
+                    face->set_flag(FaceFlag::WALL);
                 }
             }
         }
@@ -196,6 +183,10 @@ double Jacobi::solution_step(Mesh *mesh)
 
 AdaptationFlag Jacobi::adaptation_criterion(const shared_ptr<Cell> &cell)
 {
+    if (m_time > 0.0) {
+        return AdaptationFlag::NONE;
+    }
+
     double vol = get_state(cell).vol;
     for (auto &face: cell->faces())
     {

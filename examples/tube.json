@@ -1,7 +1,7 @@
 {
   "calculation": {
     "max_time!":      4.0,
-    "max_step":      100,
+    "max_step":      1000,
     "shared_memory": false,
     "threads_num":   8
   },
@@ -18,11 +18,11 @@
     },
     "boundary_conditions": {
       "left":   "INFLOW",
-      "bottom": "NOTLEAKAGE",
+      "bottom": "WALL",
       "right":  "OUTFLOW",
-      "top":    "NOTLEAKAGE",
-      "back":   "NOTLEAKAGE",
-      "front":  "NOTLEAKAGE"
+      "top":    "WALL",
+      "back":   "WALL",
+      "front":  "WALL"
     },
     "cells_per_x": 20,
     "cells_per_y!": 200,

@@ -14,7 +14,6 @@ enum class FaceFlag : int {
     FUNCTION = 5,    ///< Функция задается пользователем.
     INFLOW = 6,      ///< Втекание жидкости.
     OUTFLOW = 7,     ///< Вытекание жидкости.
-    NOTLEAKAGE = 8,  ///< Может ли жидкость протекать через стенку.
 };
 
 /// @brief Преобразует флаг в целочисленный тип.
@@ -46,8 +45,6 @@ inline std::string to_string(FaceFlag flag) {
             return "INFLOW";
         case FaceFlag::OUTFLOW:
             return "OUTFLOW";
-        case FaceFlag::NOTLEAKAGE:
-            return "NOTLEAKAGE";
         default:
             throw std::runtime_error("Unknown FaceFlag");
     }
@@ -73,8 +70,6 @@ inline FaceFlag to_face_flag(std::string str) {
         return FaceFlag::INFLOW;
     } else if (str == "OUTFLOW") {
         return FaceFlag::OUTFLOW;
-    } else if (str == "NOTLEAKAGE") {
-        return FaceFlag::NOTLEAKAGE;
     } else {
         throw std::runtime_error("Error: Can't read FaceFlag from string " + str);
     }
