@@ -41,7 +41,7 @@
     "output_format": "VTK",
     "output_directory": "output",
     "filename_prefix": "mesh",
-    "variables": ["u_old", "u_new", "vol", "vx","vy","vz","v"],
+    "variables": ["u_old", "u_new", "vol", "vx", "vy", "vz", "v", "p"],
     "write_frequencies": [
       {"time": 0.0,    "frequency": 10.0 }
     ]

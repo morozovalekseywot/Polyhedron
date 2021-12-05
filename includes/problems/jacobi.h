@@ -13,6 +13,7 @@ struct JacobiCellData
     double u1; ///< значение скалярного потенциала на предыдущем шаге
     double u2; ///< значение скалярного потенциала на следующем шаге
     Vector3d v; ///< компоненты скорости
+    double p;   ///< Давление
     double vol; ///< Объёмная доля
 
     JacobiCellData() : idx(0), u1(0.0), u2(0.0), v({0.0, 0.0, 0.0}), vol(0.0)
@@ -63,9 +64,12 @@ public:
     double get_integral_param(const string &name) const override;
 
 private:
+    double boundary_function(FaceFlag flag, const Vector3d &vec, const Vector3d &n) const;
+
     double m_eps = 0.0; // max|u2-u1|
     double m_delta = 0.0;
     bool first_step = true; // был ли совершён первый шаг расчёта
+    double V0;
 
     JacobiCellData get_state(Cell_Ref cell) const;
 

@@ -10,6 +10,7 @@
 Jacobi::Jacobi(const Configuration &config)
 {
     figure = surf::Surface("examples/figure/pyramid2.stl");
+    V0 = 10.0;
 }
 
 uint Jacobi::cell_data_size() const
@@ -25,20 +26,21 @@ void Jacobi::initialization(Mesh *mesh)
     {
         JacobiCellData data;
         data.vol = figure.is_inside(cell->center());
-        data.u1 = 0.0;
-        data.u2 = 0.0;
+        data.u1 = -V0*cell->center()[0];
+        data.u2 = -V0*cell->center()[0];
+        data.p = 0.0;
         // data.idx = ??
         set_state(cell, data);
     }
 }
 
-double boundary_function(FaceFlag flag,const Vector3d &vec, const Vector3d &n)
+double Jacobi::boundary_function(FaceFlag flag, const Vector3d &vec, const Vector3d &n) const
 {
     if(flag == FaceFlag::INFLOW)
-        return 10.0;
+        return V0;
 
     if(flag == FaceFlag::OUTFLOW)
-        return -10.0;
+        return -V0;
 
     return 0.0;
 }
@@ -70,11 +72,35 @@ double Jacobi::solution_step(Mesh *mesh)
     // u_a * sum(mu) - sum(mu * u_b) = граничное условие или 0
     for (auto cell: *mesh->cells())
     {
-        if (get_state(cell).vol > 0)
-        {
+        if (get_state(cell).vol > 0.0) {
             auto data = get_state(cell);
+            data.u1 = 0.0;
             data.u2 = 0.0;
+            data.p = 0.0;
             data.v = Vector3d::Zero();
+
+            int count = 0;
+            for (auto &face: cell->faces()) {
+                auto neib = face->neighbor(cell);
+                auto neib_data = get_state(neib);
+
+                if (neib_data.vol > 0.0) {
+                    continue;
+                }
+
+                // Соседняя ячейка в жидкости
+                data.u1 += neib_data.u1;
+                data.u2 += neib_data.u2;
+                data.v += neib_data.v;
+                data.p += 0.5 * neib_data.v.norm() - neib_data.v[0] * V0;
+            }
+            if (count > 0) {
+                data.u1 /= count;
+                data.u2 /= count;
+                data.p  /= count;
+                data.v  /= count;
+            }
+
             set_state(cell, data);
             continue;
         }
@@ -242,6 +268,8 @@ double Jacobi::get_cell_param(const shared_ptr<Cell> &cell, const string &name) 
         return data.vol;
     else if (name == "v")
         return data.v.norm();
+    else if (name == "p")
+        return data.p;
     else
         throw std::runtime_error("Unknown parameter '" + name + "'");
 }
