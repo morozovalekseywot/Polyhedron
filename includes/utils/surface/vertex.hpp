@@ -29,7 +29,7 @@ namespace surf
         /// вершину, если вы не найдете адекватные файлы с моделями, то есть
         /// возникнет необходимость использовать большое значение max_triangles
         /// (> 20), тогда придется использовать vector вместо static_vector
-        static const int max_triangles = 20;
+        static const int max_triangles = 100;
 
         /// Метод чтобы в конце конструктора расставить для вершин смежные треуголники
         void set_next_triangle(size_t idx);

@@ -4,3 +4,4 @@ build-debug/
 cmake-build-debug
 cmake-build-release
 bin/
+test_output/

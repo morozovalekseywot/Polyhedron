@@ -1,0 +1,49 @@
+{
+  "calculation": {
+    "max_time!":      4.0,
+    "max_step":      1,
+    "shared_memory": false,
+    "threads_num":   8
+  },
+  "mesh": {
+    "class": "rectangular",
+    "type":  "cuboid",
+    "geometry": {
+      "x_min" : -18.0,
+      "y_min" : -52.0,
+      "x_max" : 18.0,
+      "y_max" : 105.0,
+      "z_min" : -20.0,
+      "z_max" : 20.0
+    },
+    "boundary_conditions": {
+      "left":   "INFLOW",
+      "bottom": "WALL",
+      "right":  "OUTFLOW",
+      "top":    "WALL",
+      "back":   "WALL",
+      "front":  "WALL"
+    },
+    "cells_per_x": 20,
+    "cells_per_y!": 200,
+    "cells_per_z!": 1,
+    "adaptation": true,
+    "adaptation_criteria": {
+      "stype": "any",
+      "max_fine_level": 3
+    }
+  },
+  "problem": {
+    "name" : "Jacobi"
+  },
+  "io": {
+    "comment":"output_format is VTK or HDF5",
+    "output_format": "VTK",
+    "output_directory": "output",
+    "filename_prefix": "mesh",
+    "variables": ["u_old", "u_new", "vol", "vx", "vy", "vz", "v", "p"],
+    "write_frequencies": [
+      {"time": 0.0,    "frequency": 10.0 }
+    ]
+  }
+}

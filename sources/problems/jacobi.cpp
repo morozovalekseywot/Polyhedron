@@ -9,7 +9,7 @@
 
 Jacobi::Jacobi(const Configuration &config)
 {
-    figure = surf::Surface("examples/figure/pyramid2.stl");
+    figure = surf::Surface("examples/figure/dragon.stl");
     V0 = 10.0;
 }
 
@@ -26,8 +26,8 @@ void Jacobi::initialization(Mesh *mesh)
     {
         JacobiCellData data;
         data.vol = figure.is_inside(cell->center());
-        data.u1 = -V0*cell->center()[0];
-        data.u2 = -V0*cell->center()[0];
+        data.u1 = -V0 * cell->center()[0];
+        data.u2 = -V0 * cell->center()[0];
         data.p = 0.0;
         // data.idx = ??
         set_state(cell, data);
@@ -36,10 +36,10 @@ void Jacobi::initialization(Mesh *mesh)
 
 double Jacobi::boundary_function(FaceFlag flag, const Vector3d &vec, const Vector3d &n) const
 {
-    if(flag == FaceFlag::INFLOW)
+    if (flag == FaceFlag::INFLOW)
         return V0;
 
-    if(flag == FaceFlag::OUTFLOW)
+    if (flag == FaceFlag::OUTFLOW)
         return -V0;
 
     return 0.0;
@@ -47,17 +47,21 @@ double Jacobi::boundary_function(FaceFlag flag, const Vector3d &vec, const Vecto
 
 double Jacobi::solution_step(Mesh *mesh)
 {
-    if(first_step) // расстановка cтенок фигуры при первом шаге
+    if (first_step) // расстановка cтенок фигуры при первом шаге
     {
-        for (auto cell: *mesh->cells()) {
+        for (auto cell: *mesh->cells())
+        {
             JacobiCellData self_data = get_state(cell);
-            for (auto &face: cell->faces()) {
-                if (face->flag() != FaceFlag::ORDER) {
+            for (auto &face: cell->faces())
+            {
+                if (face->flag() != FaceFlag::ORDER)
+                {
                     continue;
                 }
 
                 auto neib_data = get_state(face->neighbor(cell));
-                if (self_data.vol != neib_data.vol) {
+                if (self_data.vol != neib_data.vol)
+                {
                     face->set_flag(FaceFlag::WALL);
                 }
             }
@@ -72,7 +76,8 @@ double Jacobi::solution_step(Mesh *mesh)
     // u_a * sum(mu) - sum(mu * u_b) = граничное условие или 0
     for (auto cell: *mesh->cells())
     {
-        if (get_state(cell).vol > 0.0) {
+        if (get_state(cell).vol > 0.0)
+        {
             auto data = get_state(cell);
             data.u1 = 0.0;
             data.u2 = 0.0;
@@ -80,25 +85,27 @@ double Jacobi::solution_step(Mesh *mesh)
             data.v = Vector3d::Zero();
 
             int count = 0;
-            for (auto &face: cell->faces()) {
+            for (auto &face: cell->faces())
+            {
                 auto neib = face->neighbor(cell);
                 auto neib_data = get_state(neib);
 
-                if (neib_data.vol > 0.0) {
+                if (neib_data.vol > 0.0)
                     continue;
-                }
 
                 // Соседняя ячейка в жидкости
+                count++;
                 data.u1 += neib_data.u1;
                 data.u2 += neib_data.u2;
                 data.v += neib_data.v;
                 data.p += 0.5 * neib_data.v.norm() - neib_data.v[0] * V0;
             }
-            if (count > 0) {
+            if (count > 0)
+            {
                 data.u1 /= count;
                 data.u2 /= count;
-                data.p  /= count;
-                data.v  /= count;
+                data.p /= count;
+                data.v /= count;
             }
 
             set_state(cell, data);
@@ -109,15 +116,9 @@ double Jacobi::solution_step(Mesh *mesh)
         double cond_sum = 0.0;
         for (auto &face: cell->faces())
         {
-//            if(face->flag() == FaceFlag::WALL)
-//            {
-//                mu_sum += face->area() / (face->neighbor(cell)->center() - cell->center()).norm();
-//                continue;
-//            }
-
             if (face->flag() != FaceFlag::ORDER)
             {
-                cond_sum += face->area() * boundary_function(face->flag(),face->center(), -face->normal(cell));
+                cond_sum += face->area() * boundary_function(face->flag(), face->center(), -face->normal(cell));
             } else
             {
                 auto data = get_state(face->neighbor(cell));
@@ -180,7 +181,7 @@ double Jacobi::solution_step(Mesh *mesh)
         {
             if (face->flag() != FaceFlag::ORDER)
             {
-                cond_sum += face->area() * boundary_function(face->flag(),face->center(), -face->normal(cell));
+                cond_sum += face->area() * boundary_function(face->flag(), face->center(), -face->normal(cell));
             } else
             {
                 auto data = get_state(face->neighbor(cell));
@@ -209,9 +210,8 @@ double Jacobi::solution_step(Mesh *mesh)
 
 AdaptationFlag Jacobi::adaptation_criterion(const shared_ptr<Cell> &cell)
 {
-    if (m_time > 0.0) {
+    if (m_time > 0.0)
         return AdaptationFlag::NONE;
-    }
 
     double vol = get_state(cell).vol;
     for (auto &face: cell->faces())

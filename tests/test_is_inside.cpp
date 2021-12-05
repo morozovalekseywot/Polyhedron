@@ -72,4 +72,12 @@ BOOST_AUTO_TEST_SUITE(Surface_is_inside)
         BOOST_CHECK_EQUAL(surf.is_inside(Vector3d{1.36, -0.16, -0.26}), false);
     }
 
+    BOOST_AUTO_TEST_CASE(is_inside_atlas)
+    {
+        surf::Surface surf("../examples/figure/dragon.stl");
+
+        BOOST_CHECK_EQUAL(surf.is_inside(Vector3d{0, 0, 0}), false);
+        BOOST_CHECK_EQUAL(surf.is_inside(Vector3d{3, 3, 3}), true);
+    }
+
 BOOST_AUTO_TEST_SUITE_END()

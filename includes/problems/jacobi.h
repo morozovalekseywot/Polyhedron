@@ -16,14 +16,14 @@ struct JacobiCellData
     double p;   ///< Давление
     double vol; ///< Объёмная доля
 
-    JacobiCellData() : idx(0), u1(0.0), u2(0.0), v({0.0, 0.0, 0.0}), vol(0.0)
+    JacobiCellData() : idx(0), u1(0.0), u2(0.0), v({0.0, 0.0, 0.0}), vol(0.0),p(0.0)
     {}
 
-    JacobiCellData(double idx, double u1, double u2, const Vector3d &v, double vol) : idx(idx), u1(u1), u2(u2), v(v), vol(vol)
+    JacobiCellData(double idx, double u1, double u2, const Vector3d &v, double vol, double p) : idx(idx), u1(u1), u2(u2), v(v), vol(vol), p(p)
     {}
 
     JacobiCellData(const JacobiCellData &data) : idx(data.idx), u1(data.u1),
-                                                 u2(data.u2), v(data.v), vol(data.vol)
+                                                 u2(data.u2), v(data.v), vol(data.vol),p(data.p)
     {}
 
     ~JacobiCellData() = default;

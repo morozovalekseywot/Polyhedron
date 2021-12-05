@@ -198,7 +198,7 @@ bool surf::Surface::is_inside(const Vector3d &v_) const
             return (abs(area_ - 2 * triangle.area) < triangle.area * 1e-5);
         }
         // ур-е плоскости: Ax + By + Cz + D = 0
-        // ур-е прямой: x = v.x + m * t, y = v.y + p * t, z = v.y + l * t
+        // ур-е прямой: x = v.x + m * t, y = v.y + p * t, z = v.z + l * t
         // A = y1 (z2 - z3) + y2 (z3 - z1) + y3 (z1 - z2)
         // B = z1 (x2 - x3) + z2 (x3 - x1) + z3 (x1 - x2)
         // C = x1 (y2 - y3) + x2 (y3 - y1) + x3 (y1 - y2)
@@ -218,7 +218,7 @@ bool surf::Surface::is_inside(const Vector3d &v_) const
         double t = -(D + A * v.x() + B * v.y() + C * v.z()) / (A * l.x() + B * l.y() + C * l.z());
         if (t < 0.0)
             continue;
-        Vector3d x = {v.x() + t * l.x(), v.y() + t * l.y(), v.z() + t * l.z()};
+        Vector3d x = {v.x() + t * l.x(), v.y() + t * l.y(), v.z() + t * l.z()}; // точка пересечения с плоскостью треугольника
         std::array<double, 3> arr_area = {((x - arr[0]).cross(x - arr[1])).norm(), ((x - arr[0]).cross(x - arr[2])).norm(),
                                           ((x - arr[1]).cross(x - arr[2])).norm()};
         //double area_ = ((x - arr[0]).cross(x - arr[1])).norm() + ((x - arr[0]).cross(x - arr[2])).norm() + ((x - arr[1]).cross(x - arr[2])).norm();
@@ -230,7 +230,7 @@ bool surf::Surface::is_inside(const Vector3d &v_) const
             {
                 if (area < triangle.area * 1e-5)
                 {
-                    v = (250 * v + arr[0] + arr[1] + arr[2]) / 251;
+                    v = (250 * v + (arr[0] + arr[1] + arr[2]) / 3) / 251; // сдвигаем точку внутрь треугольника
                     break;
                 }
             }
