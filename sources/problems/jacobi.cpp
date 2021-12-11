@@ -9,7 +9,7 @@
 
 Jacobi::Jacobi(const Configuration &config)
 {
-    figure = surf::Surface("examples/figure/dragon.stl");
+    figure = surf::Surface("examples/figure/tornado.stl");
     V0 = 10.0;
 }
 
