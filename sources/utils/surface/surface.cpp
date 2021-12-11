@@ -164,11 +164,11 @@ bool surf::Surface::is_inside(const Vector3d &v_) const
     /// луч в произвольном направлении. Затем отыскиваются пересечения луча
     /// и треугольников поверхности.
     Vector3d v = v_;
-    Vector3d s = {0.0, 0.0, 0.0};
-    for (auto &idx: m_triangles[m_vertices.back().triangles[0]].vertices) // берём треугольник смежный последней точке
-        s = s + m_vertices[idx].v;
-    s /= 3.0;
-    s = v + 100 * (s - v); // продлил луч
+    Vector3d s = {0.0, 0.0, 1000 * m_length};
+//    for (auto &idx: m_triangles[m_vertices.back().triangles[0]].vertices) // берём треугольник смежный последней точке
+//        s = s + m_vertices[idx].v;
+//    s /= 3.0;
+//    s = v + 100 * (s - v); // продлил луч
     Vector3d l = s - v; // направляющий вектор прямой
 
     int count = 0; // количество пересечений
