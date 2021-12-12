@@ -66,6 +66,14 @@ public:
 private:
     double boundary_function(FaceFlag flag, const Vector3d &vec, const Vector3d &n) const;
 
+    void JacobiStage(const NodeList::Part& cells) const;
+
+    void VelocityStage(const NodeList::Part& cells) const;
+
+    std::array<double, 2> ErrorsStage(const NodeList::Part& cells) const;
+
+    void UpdateStage(const NodeList::Part& cells) const;
+
     double m_eps = 0.0; // max|u2-u1|
     double m_delta = 0.0;
     bool first_step = true; // был ли совершён первый шаг расчёта

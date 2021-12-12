@@ -85,7 +85,7 @@ CalculationController::CalculationController(const string& config_filename, cons
         if (m_adaptation) {
             mpi::cout << "  Initial adaptation started\n";
             mpi::cout << "    Refine to\n";
-            for (size_t i = 0; i <= m_mesh->max_level(); ++i) {
+            for (size_t i = 0; i <= m_mesh->max_level() + 4; ++i) {
                 mpi::barrier();
                 mpi::cout << "      level " << i + 1 << "\n";
                 m_problem->initialization(m_mesh.get());

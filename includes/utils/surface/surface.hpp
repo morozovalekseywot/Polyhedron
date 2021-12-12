@@ -26,6 +26,7 @@
 
 using boost::container::static_vector;
 using Eigen::Vector3d;
+using Eigen::Matrix3d;
 
 /// using для остальных классов снаружи запрещен!
 
@@ -50,6 +51,12 @@ namespace surf
 
         /// @return True, если точка v находится внутри поверхности
         bool is_inside(const Vector3d &v) const;
+
+        /// @brief Центрировать (центр BoundingBox в начале координат)
+        void centering();
+
+        /// @brief Поворот вокруг оси на угол
+        void rotate(Vector3d n, double phi);
 
         /// Геттеры сделаны для тестов, можно потом удалить
         double getMLength() const;

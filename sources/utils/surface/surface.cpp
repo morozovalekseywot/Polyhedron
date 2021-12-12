@@ -1,7 +1,8 @@
 #include <utils/surface/surface.hpp>
 
+namespace surf {
 
-surf::Surface::Surface(const std::string &filename)
+Surface::Surface(const std::string &filename)
 {
     /// В конструкторе необходимо заполнить массивы m_vertices
     /// и m_triangles.
@@ -142,22 +143,22 @@ surf::Surface::Surface(const std::string &filename)
     }
 }
 
-double surf::Surface::getMLength() const
+double Surface::getMLength() const
 {
     return m_length;
 }
 
-const std::vector<surf::Vertex> &surf::Surface::getMVertices() const
+const std::vector<Vertex> &Surface::getMVertices() const
 {
     return m_vertices;
 }
 
-const std::vector<surf::Triangle> &surf::Surface::getMTriangles() const
+const std::vector<Triangle> &Surface::getMTriangles() const
 {
     return m_triangles;
 }
 
-bool surf::Surface::is_inside(const Vector3d &v_) const
+bool Surface::is_inside(const Vector3d &v_) const
 {
     /// Здесь простая реализация. Будем использовать простейшее правило
     /// четный-нечетный (even-odd rule). Из какой-нибудь точки выпускается
@@ -245,4 +246,56 @@ bool surf::Surface::is_inside(const Vector3d &v_) const
     /// (все должно работать короче).
 
     return count % 2 != 0;
+}
+
+void Surface::centering() {
+    Vector3d vmin = m_vertices[0];
+    Vector3d vmax = m_vertices[0];
+    for (auto &vert: m_vertices) {
+        for (int i = 0; i < 3; ++i) {
+            vmin[i] = std::min(vmin[i], vert.v[i]);
+            vmax[i] = std::max(vmax[i], vert.v[i]);
+        }
+    }
+    Vector3d c = 0.5 * (vmin + vmax);
+    for (auto& vert: m_vertices) {
+        vert.v -= c;
+    }
+}
+
+void Surface::rotate(Vector3d n, double phi) {
+    // Ось вращения
+    n.normalize();
+
+    double nx = n[0];
+    double ny = n[1];
+    double nz = n[2];
+
+    // Синус и косинус угла вращения
+    double c = std::cos(phi);
+    double s = std::sin(phi);
+
+    // матрица поворота
+    Matrix3d R;
+    R(0, 0) = c + (1 - c) * nx * nx;
+    R(0, 1) = (1 - c) * nx * ny - s * nz;
+    R(0, 2) = (1 - c) * nx * nz + s * ny;
+
+    R(1, 0) = (1 - c) * nx * ny + s * nz;
+    R(1, 1) = c + (1 - c) * ny * ny;
+    R(1, 2) = (1 - c) * ny * nz - s * nx;
+
+    R(2, 0) = (1 - c) * nx * nz - s * ny;
+    R(2, 1) = (1 - c) * ny * nz + s * nx;
+    R(2, 2) = c + (1 - c) * nz * nz;
+
+    for (auto &vert: m_vertices) {
+        vert.v = R * vert.v;
+    }
+
+    for (auto &tri: m_triangles) {
+        tri.normal = R * tri.normal;
+    }
+}
+
 }

@@ -1,0 +1,57 @@
+{
+  "calculation": {
+    "max_time!":      4.0,
+    "max_step":      1001,
+    "shared_memory": true,
+    "threads_num":   4
+  },
+  "mesh": {
+    "class": "rectangular",
+    "type":  "cuboid",
+    "geometry": {
+      "x_min" : -90.0,
+      "x_max" :  90.0,
+      "y_min" : -80.0,
+      "y_max" :  80.0,
+      "z_min" : -30.0,
+      "z_max" :  30.0
+    },
+    "boundary_conditions": {
+      "left":   "INFLOW",
+      "bottom": "WALL",
+      "right":  "OUTFLOW",
+      "top":    "WALL",
+      "back":   "WALL",
+      "front":  "WALL"
+    },
+    "cells_per_x": 40,
+    "cells_per_y!": 200,
+    "cells_per_z!": 1,
+    "adaptation": true,
+    "adaptation_criteria": {
+      "stype": "any",
+      "max_fine_level": 3
+    }
+  },
+  "problem": {
+    "name" : "Jacobi"
+  },
+  "io": {
+    "writers": [
+      {
+        "output_format": "VTK",
+        "output_directory": "output",
+        "filename_prefix": "mesh",
+        "variables": [ "u_old", "u_new", "vol", "vx", "vy", "vz", "v", "p" ],
+        "write_frequencies": [ { "time": 0.0, "frequency": 100.0 } ]
+      },
+      {
+        "output_format": "DAT",
+        "output_directory": "output",
+        "filename_prefix": "mesh",
+        "variables": [ "eps", "delta" ],
+        "write_frequencies": [ { "time": 0.0, "frequency": 0.0 } ]
+      }
+    ]
+  }
+}

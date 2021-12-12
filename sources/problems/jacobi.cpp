@@ -3,6 +3,7 @@
 #include <core/cell/cell.h>
 #include <core/cell/data_holder.h>
 #include <core/mesh/mesh.h>
+#include <utils/memory/node_list.h>
 #include <core/generator/geometry_generator.h>
 #include <core/generator/rectangle_generator.h>
 #include <problems/jacobi.h>
@@ -10,6 +11,8 @@
 Jacobi::Jacobi(const Configuration &config)
 {
     figure = surf::Surface("examples/figure/tornado.stl");
+    figure.centering();
+    figure.rotate({0.0, 0.0, 1.0}, -M_PI_2);
     V0 = 10.0;
 }
 
@@ -45,36 +48,13 @@ double Jacobi::boundary_function(FaceFlag flag, const Vector3d &vec, const Vecto
     return 0.0;
 }
 
-double Jacobi::solution_step(Mesh *mesh)
-{
-    if (first_step) // расстановка cтенок фигуры при первом шаге
-    {
-        for (auto cell: *mesh->cells())
-        {
-            JacobiCellData self_data = get_state(cell);
-            for (auto &face: cell->faces())
-            {
-                if (face->flag() != FaceFlag::ORDER)
-                {
-                    continue;
-                }
-
-                auto neib_data = get_state(face->neighbor(cell));
-                if (self_data.vol != neib_data.vol)
-                {
-                    face->set_flag(FaceFlag::WALL);
-                }
-            }
-        }
-        first_step = false;
-    }
-
+void Jacobi::JacobiStage(const NodeList::Part& cells) const {
     // Во время расчетного шага считаем потенциалы на следующей итерации u2,
     // затем записываем u2 на место u1, считаем градиент u1 методом МНК, то
     // есть получаем компоненты Vx, Vy, Vz
     // mu = S_ab/abs(center_b-center_a)
     // u_a * sum(mu) - sum(mu * u_b) = граничное условие или 0
-    for (auto cell: *mesh->cells())
+    for (auto cell: cells)
     {
         if (get_state(cell).vol > 0.0)
         {
@@ -121,8 +101,9 @@ double Jacobi::solution_step(Mesh *mesh)
                 cond_sum += face->area() * boundary_function(face->flag(), face->center(), -face->normal(cell));
             } else
             {
-                auto data = get_state(face->neighbor(cell));
-                double mu = face->area() / (face->neighbor(cell)->center() - cell->center()).norm();
+                auto neib = face->neighbor(cell);
+                auto data = get_state(neib);
+                double mu = face->area() / (neib->center() - cell->center()).dot(face->normal(neib));
                 mu_sum += mu;
                 neib_sum += data.u1 * mu;
             }
@@ -133,9 +114,11 @@ double Jacobi::solution_step(Mesh *mesh)
 
         set_state(cell, data);
     }
+}
 
+void Jacobi::VelocityStage(const NodeList::Part &cells) const {
     // расчёт скорости
-    for (auto cell: *mesh->cells())
+    for (auto cell: cells)
     {
         if (get_state(cell).vol > 1e-5 * figure.getMLength())
             continue;
@@ -167,11 +150,14 @@ double Jacobi::solution_step(Mesh *mesh)
         self_data.v = a * f;
         set_state(cell, self_data);
     }
+}
 
+std::array<double, 2> Jacobi::ErrorsStage(const NodeList::Part &cells) const {
     // расчёт погрешностей
-    m_eps = 0.0;
-    m_delta = 0.0;
-    for (auto cell: *mesh->cells())
+    double eps = 0.0;
+    double delta = 0.0;
+
+    for (auto cell: cells)
     {
         if (get_state(cell).vol > 1e-5)
             continue;
@@ -192,17 +178,64 @@ double Jacobi::solution_step(Mesh *mesh)
         }
 
         auto data = get_state(cell);
-        m_eps = max(m_eps, abs(data.u2 - data.u1));
-        m_delta = max(m_delta, abs(cond_sum + neib_sum - mu_sum * data.u2));
+        eps = max(eps, abs(data.u2 - data.u1));
+        delta = max(delta, abs(cond_sum + neib_sum - mu_sum * data.u2));
     }
 
-    for (auto cell: *mesh->cells())
+    return {eps, delta};
+}
+
+void Jacobi::UpdateStage(const NodeList::Part &cells) const {
+    for (auto cell: cells)
     {
         auto data = get_state(cell);
         data.u1 = data.u2;
         data.u2 = 0.0;
         set_state(cell, data);
     }
+}
+
+double Jacobi::solution_step(Mesh *mesh)
+{
+    if (first_step) // расстановка cтенок фигуры при первом шаге
+    {
+        for (auto cell: *mesh->cells())
+        {
+            JacobiCellData self_data = get_state(cell);
+            for (auto &face: cell->faces())
+            {
+                if (face->flag() != FaceFlag::ORDER)
+                {
+                    continue;
+                }
+
+                auto neib_data = get_state(face->neighbor(cell));
+                if (self_data.vol != neib_data.vol)
+                {
+                    face->set_flag(FaceFlag::WALL);
+                }
+            }
+        }
+        first_step = false;
+    }
+
+    using std::placeholders::_1;
+
+    mesh->map(std::bind(&Jacobi::JacobiStage, this, _1));
+
+    mesh->map(std::bind(&Jacobi::VelocityStage, this, _1));
+
+    std::vector<double> eps(mesh->n_chunks());
+    std::vector<double> delta(mesh->n_chunks());
+    mesh->map([this, &eps, &delta](const NodeList::Part& cells) {
+       auto res = ErrorsStage(cells);
+       eps[cells.part_id()]   = res[0];
+       delta[cells.part_id()] = res[1];
+    });
+    m_eps   = *std::max_element(eps.begin(), eps.end());
+    m_delta = *std::max_element(delta.begin(), delta.end());
+
+    mesh->map(std::bind(&Jacobi::UpdateStage, this, _1));
 
     m_time += 1.0;
     return 0;
@@ -247,8 +280,9 @@ void Jacobi::coarse_data(const shared_ptr<Cell> &parent, const vector<shared_ptr
 
 void Jacobi::print_info(const char *tab) const
 {
-    std::cout << std::setprecision(4) << "Eps = " << m_eps;
-    std::cout << ", Delta = " << m_delta << "\n";
+    std::cout << tab << std::scientific << std::setprecision(4)
+              << "Eps = " << m_eps << ", "
+              << "Delta = " << m_delta << "\n";
 }
 
 double Jacobi::get_cell_param(const shared_ptr<Cell> &cell, const string &name) const
@@ -276,7 +310,13 @@ double Jacobi::get_cell_param(const shared_ptr<Cell> &cell, const string &name) 
 
 double Jacobi::get_integral_param(const string &name) const
 {
-    return 0;
+    if ("eps") {
+        return m_eps;
+    } else if ("delta") {
+        return m_delta;
+    } else {
+        throw std::runtime_error("Unknown integral parameter '" + name + "'");
+    }
 }
 
 void Jacobi::set_state(const shared_ptr<Cell> &cell, const JacobiCellData &value) const

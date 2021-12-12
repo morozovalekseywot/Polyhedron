@@ -83,7 +83,7 @@ void VtkWriter::write(Problem* problem, Mesh *mesh, double time) {
 //#define WRITE_INDEX
 //#define WRITE_NORMALS
 //#define WRITE_NEI_UID
-//#define WRITE_LEVEL
+#define WRITE_LEVEL
 //#define WRITE_WORKLOAD
 //#define WRITE_VOLUME
 
