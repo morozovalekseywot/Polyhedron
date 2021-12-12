@@ -38,10 +38,9 @@ BOOST_AUTO_TEST_SUITE(Surface_constructor)
         }
     }
 
-    BOOST_AUTO_TEST_CASE(constructor_submarin)
+    BOOST_AUTO_TEST_CASE(constructor_tornado)
     {
-        surf::Surface surf("../examples/figure/atlas.stl");
-        BOOST_CHECK_CLOSE_FRACTION(1.00,1.00,0.01);
+        surf::Surface surf("../examples/figure/tornado.stl");
         std::vector<surf::Triangle> triangles = surf.getMTriangles();
         std::vector<surf::Vertex> verts = surf.getMVertices();
         for (auto &triangle: triangles)

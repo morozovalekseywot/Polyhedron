@@ -25,14 +25,20 @@ void Jacobi::initialization(Mesh *mesh)
 {
     // На стадии инициализации расставляем индексы ячеек, и начальные потенциалы
     // некоторым образом (u1).
+    int idx = 0;
     for (auto cell: *mesh->cells())
     {
         JacobiCellData data;
-        data.vol = figure.is_inside(cell->center());
+        if (figure.is_inside(cell->center()) || figure.is_inside(cell->center() + Vector3d{0, 0, figure.getMLength() * 0.001}) ||
+            figure.is_inside(cell->center() + Vector3d{0, figure.getMLength() * 0.001, 0}) ||
+            figure.is_inside(cell->center() + Vector3d{figure.getMLength() * 0.001, 0, 0}))
+            data.vol = 1.0;
+        else
+            data.vol = 0.0;
         data.u1 = -V0 * cell->center()[0];
         data.u2 = -V0 * cell->center()[0];
         data.p = 0.0;
-        // data.idx = ??
+        data.idx = idx++;
         set_state(cell, data);
     }
 }
@@ -48,15 +54,16 @@ double Jacobi::boundary_function(FaceFlag flag, const Vector3d &vec, const Vecto
     return 0.0;
 }
 
-void Jacobi::JacobiStage(const NodeList::Part& cells) const {
+void Jacobi::JacobiStage(const NodeList::Part &cells) const
+{
     // Во время расчетного шага считаем потенциалы на следующей итерации u2,
     // затем записываем u2 на место u1, считаем градиент u1 методом МНК, то
     // есть получаем компоненты Vx, Vy, Vz
     // mu = S_ab/abs(center_b-center_a)
-    // u_a * sum(mu) - sum(mu * u_b) = граничное условие или 0
+    // u_a * sum(mu) - sum(mu * u_b) = - граничное условие или 0
     for (auto cell: cells)
     {
-        if (get_state(cell).vol > 0.0)
+        if (get_state(cell).vol > 1e-5)
         {
             auto data = get_state(cell);
             data.u1 = 0.0;
@@ -116,11 +123,12 @@ void Jacobi::JacobiStage(const NodeList::Part& cells) const {
     }
 }
 
-void Jacobi::VelocityStage(const NodeList::Part &cells) const {
+void Jacobi::VelocityStage(const NodeList::Part &cells) const
+{
     // расчёт скорости
     for (auto cell: cells)
     {
-        if (get_state(cell).vol > 1e-5 * figure.getMLength())
+        if (get_state(cell).vol > 1e-5)
             continue;
         Matrix3d a = Matrix3d::Zero();
         Vector3d f = Vector3d::Zero();
@@ -128,8 +136,22 @@ void Jacobi::VelocityStage(const NodeList::Part &cells) const {
 
         for (auto &face: cell->faces())
         {
-            if (face->flag() != FaceFlag::ORDER || face->flag() == FaceFlag::WALL)
+            if (face->flag() != FaceFlag::ORDER)
+            {
+                if (face->flag() == FaceFlag::WALL)
+                {
+                    auto data = get_state(face->neighbor(cell));
+                    Vector3d c = face->neighbor(cell)->center() - cell->center();
+                    double w = 1.0 / c.squaredNorm();
+
+                    for (int i = 0; i < 3; ++i)
+                        for (int j = 0; j < 3; ++j)
+                            a(i, j) += w * c(i) * c(j);
+
+                    f += Vector3d::Zero();
+                }
                 continue;
+            }
 
             auto data = get_state(face->neighbor(cell));
             Vector3d c = face->neighbor(cell)->center() - cell->center();
@@ -152,7 +174,8 @@ void Jacobi::VelocityStage(const NodeList::Part &cells) const {
     }
 }
 
-std::array<double, 2> Jacobi::ErrorsStage(const NodeList::Part &cells) const {
+std::array<double, 2> Jacobi::ErrorsStage(const NodeList::Part &cells) const
+{
     // расчёт погрешностей
     double eps = 0.0;
     double delta = 0.0;
@@ -185,7 +208,8 @@ std::array<double, 2> Jacobi::ErrorsStage(const NodeList::Part &cells) const {
     return {eps, delta};
 }
 
-void Jacobi::UpdateStage(const NodeList::Part &cells) const {
+void Jacobi::UpdateStage(const NodeList::Part &cells) const
+{
     for (auto cell: cells)
     {
         auto data = get_state(cell);
@@ -205,9 +229,7 @@ double Jacobi::solution_step(Mesh *mesh)
             for (auto &face: cell->faces())
             {
                 if (face->flag() != FaceFlag::ORDER)
-                {
                     continue;
-                }
 
                 auto neib_data = get_state(face->neighbor(cell));
                 if (self_data.vol != neib_data.vol)
@@ -227,13 +249,23 @@ double Jacobi::solution_step(Mesh *mesh)
 
     std::vector<double> eps(mesh->n_chunks());
     std::vector<double> delta(mesh->n_chunks());
-    mesh->map([this, &eps, &delta](const NodeList::Part& cells) {
-       auto res = ErrorsStage(cells);
-       eps[cells.part_id()]   = res[0];
-       delta[cells.part_id()] = res[1];
-    });
-    m_eps   = *std::max_element(eps.begin(), eps.end());
+    mesh->map([this, &eps, &delta](const NodeList::Part &cells)
+              {
+                  auto res = ErrorsStage(cells);
+                  eps[cells.part_id()] = res[0];
+                  delta[cells.part_id()] = res[1];
+              });
+    m_eps = *std::max_element(eps.begin(), eps.end());
+    average_eps = 0.0;
+    for (auto &e: eps)
+        average_eps += e;
+    average_eps /= eps.size();
+
     m_delta = *std::max_element(delta.begin(), delta.end());
+    average_delta = 0.0;
+    for (auto &d: delta)
+        average_delta += d;
+    average_delta /= delta.size();
 
     mesh->map(std::bind(&Jacobi::UpdateStage, this, _1));
 
@@ -282,7 +314,9 @@ void Jacobi::print_info(const char *tab) const
 {
     std::cout << tab << std::scientific << std::setprecision(4)
               << "Eps = " << m_eps << ", "
-              << "Delta = " << m_delta << "\n";
+              << "Average Eps = " << average_eps << ", "
+              << "Delta = " << m_delta << ", "
+              <<"Average Delta = " << average_delta << "\n";
 }
 
 double Jacobi::get_cell_param(const shared_ptr<Cell> &cell, const string &name) const
@@ -310,11 +344,14 @@ double Jacobi::get_cell_param(const shared_ptr<Cell> &cell, const string &name) 
 
 double Jacobi::get_integral_param(const string &name) const
 {
-    if ("eps") {
+    if (name == "eps")
+    {
         return m_eps;
-    } else if ("delta") {
+    } else if (name == "delta")
+    {
         return m_delta;
-    } else {
+    } else
+    {
         throw std::runtime_error("Unknown integral parameter '" + name + "'");
     }
 }

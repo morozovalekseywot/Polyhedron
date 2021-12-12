@@ -72,12 +72,23 @@ BOOST_AUTO_TEST_SUITE(Surface_is_inside)
         BOOST_CHECK_EQUAL(surf.is_inside(Vector3d{1.36, -0.16, -0.26}), false);
     }
 
-    BOOST_AUTO_TEST_CASE(is_inside_atlas)
+    BOOST_AUTO_TEST_CASE(is_inside_tornado)
     {
-        surf::Surface surf("../examples/figure/dragon.stl");
+        surf::Surface surf("../examples/figure/tornado.stl");
 
-        BOOST_CHECK_EQUAL(surf.is_inside(Vector3d{0, 0, 0}), false);
-        BOOST_CHECK_EQUAL(surf.is_inside(Vector3d{3, 3, 3}), true);
+//        BOOST_CHECK_EQUAL(surf.is_inside(Vector3d{0, 0, 0}), false);
+        std::vector<Vector3d> points{{110.108, 88.0426, 14.1429},
+                                     {110.108, 89.8723, 14.1429},
+                                     {110.108, 89.8723, 12.25},
+                                     {110.108, 88.0426, 12.25}};
+        Vector3d cent = Vector3d::Zero();
+        for (auto &p: points)
+        {
+            cent += p;
+            BOOST_CHECK_EQUAL(surf.is_inside(p), true);
+        }
+        cent /= points.size();
+        BOOST_CHECK_EQUAL(surf.is_inside(cent), true);
     }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -165,7 +165,8 @@ bool Surface::is_inside(const Vector3d &v_) const
     /// луч в произвольном направлении. Затем отыскиваются пересечения луча
     /// и треугольников поверхности.
     Vector3d v = v_;
-    Vector3d s = {0.0, 0.0, 1000 * m_length};
+    Vector3d s = {0.257381649640262, 0.5428934530125299, 0.7993881317011088};
+    s *= 1000 * m_length;
 //    for (auto &idx: m_triangles[m_vertices.back().triangles[0]].vertices) // берём треугольник смежный последней точке
 //        s = s + m_vertices[idx].v;
 //    s /= 3.0;
