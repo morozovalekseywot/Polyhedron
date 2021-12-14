@@ -1,7 +1,7 @@
 {
   "calculation": {
     "max_time!":      4.0,
-    "max_step":      1001,
+    "max_step":      1000,
     "shared_memory": true,
     "threads_num":   4
   },
@@ -42,7 +42,7 @@
         "output_format": "VTK",
         "output_directory": "output",
         "filename_prefix": "mesh",
-        "variables": [ "u_old", "u_new", "vol", "vx", "vy", "vz", "v", "p" ],
+        "variables": [ "u", "vol", "vx", "vy", "vz", "v", "p", "eps", "delta" ],
         "write_frequencies": [ { "time": 0.0, "frequency": 100.0 } ]
       },
       {

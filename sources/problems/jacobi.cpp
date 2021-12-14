@@ -23,6 +23,12 @@ uint Jacobi::cell_data_size() const
 
 void Jacobi::initialization(Mesh *mesh)
 {
+    static bool first_time = true;
+    if (!first_time) {
+        return;
+    }
+    first_time = false;
+
     // На стадии инициализации расставляем индексы ячеек, и начальные потенциалы
     // некоторым образом (u1).
     int idx = 0;
@@ -63,39 +69,42 @@ void Jacobi::JacobiStage(const NodeList::Part &cells) const
     // u_a * sum(mu) - sum(mu * u_b) = - граничное условие или 0
     for (auto cell: cells)
     {
-        if (get_state(cell).vol > 1e-5)
+        auto zc = get_state(cell);
+
+        // Ячейки тела
+        if (get_state(cell).vol > 0.5)
         {
-            auto data = get_state(cell);
-            data.u1 = 0.0;
-            data.u2 = 0.0;
-            data.p = 0.0;
-            data.v = Vector3d::Zero();
+            zc.u1 = 0.0;
+            zc.u2 = 0.0;
+            zc.p = 0.0;
+            zc.v = Vector3d::Zero();
 
             int count = 0;
             for (auto &face: cell->faces())
             {
                 auto neib = face->neighbor(cell);
-                auto neib_data = get_state(neib);
+                auto zn = get_state(neib);
 
-                if (neib_data.vol > 0.0)
-                    continue;
+                if (zn.vol > 0.5) {
+                    break;
+                }
 
                 // Соседняя ячейка в жидкости
                 count++;
-                data.u1 += neib_data.u1;
-                data.u2 += neib_data.u2;
-                data.v += neib_data.v;
-                data.p += 0.5 * neib_data.v.norm() - neib_data.v[0] * V0;
+                zc.u1 += zn.u1;
+                zc.u2 += zn.u2;
+                zc.v += zn.v;
+                zc.p += 0.5 * zn.v.norm() - zn.v[0] * V0;
             }
             if (count > 0)
             {
-                data.u1 /= count;
-                data.u2 /= count;
-                data.p /= count;
-                data.v /= count;
-            }
+                zc.u1 /= count;
+                zc.u2 /= count;
+                zc.p /= count;
+                zc.v /= count;
 
-            set_state(cell, data);
+                set_state(cell, zc);
+            }
             continue;
         }
 
@@ -109,15 +118,23 @@ void Jacobi::JacobiStage(const NodeList::Part &cells) const
             } else
             {
                 auto neib = face->neighbor(cell);
-                auto data = get_state(neib);
+                auto zn = get_state(neib);
+                if (zn.vol != zc.vol) {
+                    continue;
+                }
                 double mu = face->area() / (neib->center() - cell->center()).dot(face->normal(neib));
                 mu_sum += mu;
-                neib_sum += data.u1 * mu;
+                neib_sum += zn.u1 * mu;
             }
         }
 
         JacobiCellData data = get_state(cell);
-        data.u2 = (cond_sum + neib_sum) / mu_sum;
+        if (mu_sum != 0.0) {
+            data.u2 = (cond_sum + neib_sum) / mu_sum;
+        }
+        else {
+            data.u2 = 0.0;
+        }
 
         set_state(cell, data);
     }
@@ -128,49 +145,60 @@ void Jacobi::VelocityStage(const NodeList::Part &cells) const
     // расчёт скорости
     for (auto cell: cells)
     {
-        if (get_state(cell).vol > 1e-5)
-            continue;
-        Matrix3d a = Matrix3d::Zero();
-        Vector3d f = Vector3d::Zero();
-        JacobiCellData self_data = get_state(cell);
+        auto cell_c = cell->center();
 
+        JacobiCellData zc = get_state(cell);
+        double uc = zc.u1;
+
+        if (get_state(cell).vol > 0.5) {
+            zc.v = {0.0, 0.0, 0.0};
+            set_state(cell, zc);
+            continue;
+        }
+
+        Matrix3d A = Matrix3d::Zero();
+        Vector3d f = Vector3d::Zero();
         for (auto &face: cell->faces())
         {
+            auto face_c = face->center();
+            auto normal = -face->normal(cell);
+
             if (face->flag() != FaceFlag::ORDER)
             {
-                if (face->flag() == FaceFlag::WALL)
-                {
-                    auto data = get_state(face->neighbor(cell));
-                    Vector3d c = face->neighbor(cell)->center() - cell->center();
-                    double w = 1.0 / c.squaredNorm();
+                auto phi = boundary_function(face->flag(), face_c, normal);
 
-                    for (int i = 0; i < 3; ++i)
-                        for (int j = 0; j < 3; ++j)
-                            a(i, j) += w * c(i) * c(j);
+                // Потенциал на грани
+                double uf = uc + phi * (cell_c - face_c).norm();
 
-                    f += Vector3d::Zero();
-                }
+                Vector3d c = face_c - cell_c;
+                double w = 1.0 / c.squaredNorm();
+                for (int i = 0; i < 3; ++i)
+                    for (int j = 0; j < 3; ++j)
+                        A(i, j) += w * c(i) * c(j);
+
+                f += w * (uc - uf) * c;
                 continue;
             }
 
-            auto data = get_state(face->neighbor(cell));
+            auto zn = get_state(face->neighbor(cell));
+            double un = zn.vol != zc.vol ? uc : zn.u1;
+
             Vector3d c = face->neighbor(cell)->center() - cell->center();
             double w = 1.0 / c.squaredNorm();
 
             for (int i = 0; i < 3; ++i)
                 for (int j = 0; j < 3; ++j)
-                    a(i, j) += w * c(i) * c(j);
+                    A(i, j) += w * c(i) * c(j);
 
-            f += w * (self_data.u2 - data.u2) * c;
+            f += w * (uc - un) * c;
         }
 
-        _2D(a(2, 2) = 1.0;)
-        // TODO     Size<=1) || (Size>4) || (extract_data(src.nestedExpression())!=extract_data(dst)))
-        //              && "Aliasing problem detected in inverse(), you need to do inverse().eval() here."
-        a = a.inverse().eval();
+        _2D(A(2, 2) = 1.0;)
 
-        self_data.v = a * f;
-        set_state(cell, self_data);
+        auto B = A.inverse().eval();
+
+        zc.v = B * f;
+        set_state(cell, zc);
     }
 }
 
@@ -182,8 +210,15 @@ std::array<double, 2> Jacobi::ErrorsStage(const NodeList::Part &cells) const
 
     for (auto cell: cells)
     {
-        if (get_state(cell).vol > 1e-5)
+        auto zc = get_state(cell);
+
+        if (zc.vol > 0.5) {
+            zc.eps = 0.0;
+            zc.delta = 0.0;
+            set_state(cell, zc);
             continue;
+        }
+
         double neib_sum = 0.0, mu_sum = 0.0;
         double cond_sum = 0.0;
         for (auto &face: cell->faces())
@@ -193,16 +228,24 @@ std::array<double, 2> Jacobi::ErrorsStage(const NodeList::Part &cells) const
                 cond_sum += face->area() * boundary_function(face->flag(), face->center(), -face->normal(cell));
             } else
             {
-                auto data = get_state(face->neighbor(cell));
-                double mu = face->area() / (face->neighbor(cell)->center() - cell->center()).norm();
+                auto neib = face->neighbor(cell);
+                auto zn = get_state(neib);
+                if (zn.vol != zc.vol) {
+                    continue;
+                }
+                double mu = face->area() / (neib->center() - cell->center()).dot(face->normal(neib));
                 mu_sum += mu;
-                neib_sum += data.u2 * mu;
+                neib_sum += zn.u1 * mu;
             }
         }
 
-        auto data = get_state(cell);
-        eps = max(eps, abs(data.u2 - data.u1));
-        delta = max(delta, abs(cond_sum + neib_sum - mu_sum * data.u2));
+        zc.eps = std::abs(zc.u2 - zc.u1);
+        zc.delta = std::abs(cond_sum + neib_sum - mu_sum * zc.u1);
+
+        eps = std::max(eps, zc.eps);
+        delta = std::max(delta, zc.delta);
+
+        set_state(cell, zc);
     }
 
     return {eps, delta};
@@ -221,26 +264,6 @@ void Jacobi::UpdateStage(const NodeList::Part &cells) const
 
 double Jacobi::solution_step(Mesh *mesh)
 {
-    if (first_step) // расстановка cтенок фигуры при первом шаге
-    {
-        for (auto cell: *mesh->cells())
-        {
-            JacobiCellData self_data = get_state(cell);
-            for (auto &face: cell->faces())
-            {
-                if (face->flag() != FaceFlag::ORDER)
-                    continue;
-
-                auto neib_data = get_state(face->neighbor(cell));
-                if (self_data.vol != neib_data.vol)
-                {
-                    face->set_flag(FaceFlag::WALL);
-                }
-            }
-        }
-        first_step = false;
-    }
-
     using std::placeholders::_1;
 
     mesh->map(std::bind(&Jacobi::JacobiStage, this, _1));
@@ -300,21 +323,41 @@ void Jacobi::split_data(const shared_ptr<Cell> &parent, const vector<shared_ptr<
     for (auto &child: children)
     {
         child->data_holder()->resize(cell_data_size());
-        set_state(child, pdata);
+
+        auto ch_data = pdata;
+
+        if (figure.is_inside(child->center()) ||
+            figure.is_inside(child->center() + Vector3d{0, 0, figure.getMLength() * 0.001}) ||
+            figure.is_inside(child->center() + Vector3d{0, figure.getMLength() * 0.001, 0}) ||
+            figure.is_inside(child->center() + Vector3d{figure.getMLength() * 0.001, 0, 0}))
+            ch_data.vol = 1.0;
+        else
+            ch_data.vol = 0.0;
+
+        set_state(child, ch_data);
     }
 }
 
 void Jacobi::coarse_data(const shared_ptr<Cell> &parent, const vector<shared_ptr<Cell>> &children)
 {
-    auto chdata = get_state(children[0]);
-    set_state(parent, chdata);
+    auto p_data = get_state(children[0]);
+
+    if (figure.is_inside(parent->center()) ||
+        figure.is_inside(parent->center() + Vector3d{0, 0, figure.getMLength() * 0.001}) ||
+        figure.is_inside(parent->center() + Vector3d{0, figure.getMLength() * 0.001, 0}) ||
+        figure.is_inside(parent->center() + Vector3d{figure.getMLength() * 0.001, 0, 0}))
+        p_data.vol = 1.0;
+    else
+        p_data.vol = 0.0;
+
+    set_state(parent, p_data);
 }
 
 void Jacobi::print_info(const char *tab) const
 {
     std::cout << tab << std::scientific << std::setprecision(4)
               << "Eps = " << m_eps << ", "
-              << "Average Eps = " << average_eps << ", "
+              << "Average Eps = " << average_eps << ",\n" << tab
               << "Delta = " << m_delta << ", "
               <<"Average Delta = " << average_delta << "\n";
 }
@@ -322,10 +365,8 @@ void Jacobi::print_info(const char *tab) const
 double Jacobi::get_cell_param(const shared_ptr<Cell> &cell, const string &name) const
 {
     JacobiCellData data = get_state(cell);
-    if (name == "u_old")
+    if (name == "u")
         return data.u1;
-    else if (name == "u_new")
-        return data.u2;
     else if (name == "vx")
         return data.v.x();
     else if (name == "vy")
@@ -338,6 +379,12 @@ double Jacobi::get_cell_param(const shared_ptr<Cell> &cell, const string &name) 
         return data.v.norm();
     else if (name == "p")
         return data.p;
+    else if (name == "eps") {
+        return data.eps;
+    }
+    else if (name == "delta") {
+        return data.delta;
+    }
     else
         throw std::runtime_error("Unknown parameter '" + name + "'");
 }
