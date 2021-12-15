@@ -24,7 +24,8 @@ uint Jacobi::cell_data_size() const
 void Jacobi::initialization(Mesh *mesh)
 {
     static bool first_time = true;
-    if (!first_time) {
+    if (!first_time)
+    {
         return;
     }
     first_time = false;
@@ -85,26 +86,26 @@ void Jacobi::JacobiStage(const NodeList::Part &cells) const
                 auto neib = face->neighbor(cell);
                 auto zn = get_state(neib);
 
-                if (zn.vol > 0.5) {
-                    break;
-                }
+                if (zn.vol > 0.5)
+                    continue;
 
                 // Соседняя ячейка в жидкости
-                count++;
-                zc.u1 += zn.u1;
-                zc.u2 += zn.u2;
-                zc.v += zn.v;
-                zc.p += 0.5 * zn.v.norm() - zn.v[0] * V0;
+                Vector3d n = cell->center() - face->center();
+                n.normalize();
+                double v = (zn.v.x() * n.x() + zn.v.y() * n.y() + zn.v.z() * n.z());
+                if (abs(10 * v) > zn.v.norm()) // не знаю что лучше, если убрать модуль то никогда не получим отрицательное давление
+                {
+                    // проверяем что проекция скорости на нормаль не много меньше модуля самой скорости
+                    zc.p += V0 * (zn.v.x() * n.x() + zn.v.y() * n.y() + zn.v.z() * n.z()) / face->area();
+                    count++;
+                }
             }
             if (count > 0)
-            {
-                zc.u1 /= count;
-                zc.u2 /= count;
                 zc.p /= count;
-                zc.v /= count;
+            else
+                zc.p = 0.0;
 
-                set_state(cell, zc);
-            }
+            set_state(cell, zc);
             continue;
         }
 
@@ -119,7 +120,8 @@ void Jacobi::JacobiStage(const NodeList::Part &cells) const
             {
                 auto neib = face->neighbor(cell);
                 auto zn = get_state(neib);
-                if (zn.vol != zc.vol) {
+                if (zn.vol != zc.vol)
+                {
                     continue;
                 }
                 double mu = face->area() / (neib->center() - cell->center()).dot(face->normal(neib));
@@ -129,10 +131,11 @@ void Jacobi::JacobiStage(const NodeList::Part &cells) const
         }
 
         JacobiCellData data = get_state(cell);
-        if (mu_sum != 0.0) {
+        if (mu_sum != 0.0)
+        {
             data.u2 = (cond_sum + neib_sum) / mu_sum;
-        }
-        else {
+        } else
+        {
             data.u2 = 0.0;
         }
 
@@ -150,7 +153,8 @@ void Jacobi::VelocityStage(const NodeList::Part &cells) const
         JacobiCellData zc = get_state(cell);
         double uc = zc.u1;
 
-        if (get_state(cell).vol > 0.5) {
+        if (get_state(cell).vol > 0.5)
+        {
             zc.v = {0.0, 0.0, 0.0};
             set_state(cell, zc);
             continue;
@@ -212,7 +216,8 @@ std::array<double, 2> Jacobi::ErrorsStage(const NodeList::Part &cells) const
     {
         auto zc = get_state(cell);
 
-        if (zc.vol > 0.5) {
+        if (zc.vol > 0.5)
+        {
             zc.eps = 0.0;
             zc.delta = 0.0;
             set_state(cell, zc);
@@ -230,7 +235,8 @@ std::array<double, 2> Jacobi::ErrorsStage(const NodeList::Part &cells) const
             {
                 auto neib = face->neighbor(cell);
                 auto zn = get_state(neib);
-                if (zn.vol != zc.vol) {
+                if (zn.vol != zc.vol)
+                {
                     continue;
                 }
                 double mu = face->area() / (neib->center() - cell->center()).dot(face->normal(neib));
@@ -359,7 +365,7 @@ void Jacobi::print_info(const char *tab) const
               << "Eps = " << m_eps << ", "
               << "Average Eps = " << average_eps << ",\n" << tab
               << "Delta = " << m_delta << ", "
-              <<"Average Delta = " << average_delta << "\n";
+              << "Average Delta = " << average_delta << "\n";
 }
 
 double Jacobi::get_cell_param(const shared_ptr<Cell> &cell, const string &name) const
@@ -379,13 +385,13 @@ double Jacobi::get_cell_param(const shared_ptr<Cell> &cell, const string &name) 
         return data.v.norm();
     else if (name == "p")
         return data.p;
-    else if (name == "eps") {
+    else if (name == "eps")
+    {
         return data.eps;
-    }
-    else if (name == "delta") {
+    } else if (name == "delta")
+    {
         return data.delta;
-    }
-    else
+    } else
         throw std::runtime_error("Unknown parameter '" + name + "'");
 }
 
